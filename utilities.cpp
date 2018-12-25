@@ -5,11 +5,13 @@
 #include <sstream>
 #include <climits>
 
+#include "g.h"
 #include "utilities.h"
+#include "help_functions.h"
 
-#define VADER_LEXICON "./vader_lexicon.csv"
-#define CRYPTOS	"coins_queries.csv"
-#define CRYPTO_NUMBER 100
+#define VADER_LEXICON 	"./vader_lexicon.csv"
+#define CRYPTOS			"coins_queries.csv"
+#define CRYPTO_NUMBER 	100
 
 using namespace std;
 
@@ -221,4 +223,39 @@ void normalisation(vector<vector<double>> &users)
 			users.at(i).at(j) -= average;
 		}
 	}
+}
+
+HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users, char ** argv, short int inputFileIndex, int k, int L)
+{
+	ifstream infile;
+
+	infile.open(argv[inputFileIndex]);
+	if(!infile.is_open())
+	{
+		cout << "Could not open input data file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	/*== find table size*/
+	int tableSize = help_functions::calculate_tableSize(infile, "cosine", k);
+
+	/*== find dimensions*/
+	int dimensions = CRYPTO_NUMBER;
+
+	/*== construct hash_table*/
+	HashTable<vector<double>> ** hash_tableptr = new HashTable<vector<double>>*[L];
+
+	for(int i=0; i<L; i++)
+		hash_tableptr[i] = new HashTable_COS<vector<double>>(tableSize, k, dimensions);
+
+	/*== fill the hash table with users vector*/
+	for(unsigned int i=0; i<users.size(); i++)
+	{
+		for(int j=0; j<L; j++)
+			hash_tableptr[j]->put(users.at(i), to_string(i));
+	}
+
+	infile.close();
+
+	return hash_tableptr;
 }

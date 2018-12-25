@@ -13,6 +13,8 @@ int main(int argc, char** argv)
 {
 	short int inputFileIndex, outputFileIndex;
 	bool validateFlag = false;
+	int k = 4;
+	int L = 6;
 
 	/*== check the #args*/	
 	rerunCheck(argc, ARGS);
@@ -31,6 +33,9 @@ int main(int argc, char** argv)
 
 	/*== normalize user vectors*/
 	normalisation(users);
+
+	/*== create and fill hash table*/
+	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, argv, inputFileIndex, k, L);
 
 	exit(EXIT_SUCCESS);	
 }
