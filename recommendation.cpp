@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <vector>
 
 #include "utilities.h"
 
@@ -25,6 +26,11 @@ int main(int argc, char** argv)
 	/*== create a map with every crypto*/
 	map<string, int> cryptos = cryptosMap();
 	
+	/*== construct user vectors*/
+	vector<vector<double>> users = createUserVector(argv, inputFileIndex, vaderLexicon, cryptos);
+
+	/*== normalize user vectors*/
+	normalisation(users);
 
 	exit(EXIT_SUCCESS);	
 }
