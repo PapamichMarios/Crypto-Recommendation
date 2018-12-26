@@ -1,7 +1,7 @@
 CPP      = g++
 OBJ      = recommendation.o utilities.o g.o fi.o hyperplane.o
 BIN      = recommendation
-CFLAGS   = -g -std=c++11 -Wall
+CFLAGS   = -g -std=c++11
 
 $(BIN): $(OBJ)
 	$(CPP) -o $(BIN) $(OBJ) $(CFLAGS)
