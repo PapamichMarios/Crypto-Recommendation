@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "utilities.h"
+#include "recommendationLSH.h"
 #include "hash_table.h"
 
 #define ARGS 5
@@ -33,7 +34,7 @@ int main(int argc, char** argv)
 	map<int, string> cryptosIndex = cryptosIndexMap();
 
 	/*== construct user vectors*/
-	vector<vector<double>> users = createUserVector(argv, inputFileIndex, vaderLexicon, cryptos);
+	vector<vector<double>> users = createUserVector(argv[inputFileIndex], vaderLexicon, cryptos);
 
 	/*== normalize user vectors*/
 	normalisation(users);
@@ -42,7 +43,7 @@ int main(int argc, char** argv)
 	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, argv, inputFileIndex, k, L);
 
 	/*== get closest neighbours cosine LSH*/
-	recommendationLSH(hash_tableptr, users, cryptosIndex, L);
+	recommendationLSH(hash_tableptr, users, cryptosIndex, L, argv[outputFileIndex]);
 
 	exit(EXIT_SUCCESS);	
 }
