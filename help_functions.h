@@ -41,15 +41,6 @@ namespace help_functions
 		outputfile << "tTrue: " << measurements.at(1) << std::endl;
 	}
 
-	inline void print_NN_ANN_CUBE(std::ofstream &outputfile, double distance_ANN, double time_ANN, double distance_NN, double time_NN, std::string identifier_ANN)
-	{
-		outputfile << "Nearest neighbor: " << identifier_ANN << std::endl;
-		outputfile << "distanceLSH: " << distance_ANN << std::endl;
-		outputfile << "distanceTrue: " << distance_NN << std::endl;
-		outputfile << "tLSH: " << time_ANN << std::endl;
-		outputfile << "tTrue: " << time_NN << std::endl;
-	}
-
 	inline double * normal_distribution_vector(int dim)
 	{
 	 	double* vector = (double*)std::calloc(dim+1, sizeof(double));
@@ -98,20 +89,6 @@ namespace help_functions
 			 cos(x,y) = x*y/|x|*|y|
 		  == */
 		return distance = 1 - dot_product/length_product;
-	}
-
-	inline int hamming_distance(int x, int y)
-	{
-  		int dist = 0;
-		char val = x^y;
-
-  		while(val)   
-  		{
-    		++dist; 
-    		val &= val - 1; 
-  		}
-
- 		return dist;
 	}
 
 	inline bool vectorIsZero(std::vector<double> v)
