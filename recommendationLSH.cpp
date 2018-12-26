@@ -5,6 +5,7 @@
 #include <sstream>
 #include <climits>
 #include <cmath>
+#include <ctime>
 
 #include "utilities.h"
 #include "help_functions.h"
@@ -53,6 +54,9 @@ HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users
 
 void recommendationLSH(HashTable<vector<double>> ** hash_tableptr, vector<vector<double>> users, map<int, string> cryptos, int L, string outputfile)
 {
+	printRecommendationTitle(outputfile, "Cosine LSH");
+	time_t start_time = clock();
+
 	/*== find closest neighbours*/
 	for(unsigned int i=0; i<users.size(); i++)
 	{
@@ -111,6 +115,8 @@ void recommendationLSH(HashTable<vector<double>> ** hash_tableptr, vector<vector
 		/*== print cryptos*/
 		printRecommendation(cryptos, recommendation_ids, i, outputfile);
 	}
+
+	printRecommendationTimer(outputfile, (double) (clock() - start_time)/CLOCKS_PER_SEC);
 }
 
 vector<int> groupNeighboursFromTables(vector<vector<int>> all_neighbours, int L)

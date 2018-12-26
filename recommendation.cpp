@@ -24,6 +24,9 @@ int main(int argc, char** argv)
 	/*== get inline arguments*/
 	getInlineArguments(argc, argv, inputFileIndex, outputFileIndex, validateFlag);
 
+	/*== clear outputfile */
+	resetOutput(argv[outputFileIndex]);
+
 	/*== create a map with the sentimental value of every word*/
 	map<string, float> vaderLexicon = vaderLexiconMap();
 	

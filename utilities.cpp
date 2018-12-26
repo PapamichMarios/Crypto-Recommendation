@@ -278,13 +278,63 @@ void printRecommendation(map<int, string> cryptos, vector<int> recommendations, 
 		exit(EXIT_FAILURE);
 	}
 
-	outfile << "<u" << user << ">";
+	outfile << "<u" << user+1 << ">";
 	for (unsigned int j=0; j<RECOMMENDATION_USERS; j++)
 		outfile << cryptos.at(recommendations.at(j)) << " ";
 
 	outfile << endl;
+
+	outfile.close();
 }
 
+void printRecommendationTitle(string outputfile, string title)
+{
+	ofstream outfile;
+
+	outfile.open(outputfile, ofstream::app);
+	if(!outfile.is_open())
+	{
+		cout << "Could not open output file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	outfile << title << endl;
+
+	outfile.close();
+	
+}
+
+void printRecommendationTimer(string outputfile, double time)
+{
+	ofstream outfile;
+
+	outfile.open(outputfile, ofstream::app);
+	if(!outfile.is_open())
+	{
+		cout << "Could not open output file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	outfile << "Execution time: " << time << endl << endl;
+
+	outfile.close();
+}
+
+void resetOutput(string outputfile)
+{
+	
+	/*== open outputfile for writing*/
+	ofstream outfile;
+
+	outfile.open(outputfile, ofstream::out | ofstream::trunc);
+	if(!outfile.is_open())
+	{
+		cout << "Could not open output file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	outfile.close();
+}
 
 bool vectorIsZero(vector<double> v)
 {

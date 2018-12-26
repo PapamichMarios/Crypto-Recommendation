@@ -20,5 +20,8 @@ bool vectorIsZero(std::vector<double> v);
 
 
 void printRecommendation(std::map<int, std::string> cryptos, std::vector<int> recommendations, int user, std::string outputfile);
+void printRecommendationTitle(std::string outputfile, std::string title);
+void printRecommendationTimer(std::string outputfile, double time);
+void resetOutput(std::string outputfile);
 
 #endif
