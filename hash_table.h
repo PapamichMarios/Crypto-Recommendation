@@ -57,6 +57,7 @@ class HashTable
 		virtual int hash(const K &key)=0;
     	virtual void put(const K &key, std::string identifier) =0;
 
+		virtual std::vector<int> recommendationANN(const K &query, int max_neighbours)=0;
 		virtual std::vector<std::string> ANN(const K &query, double &distance_ANN, double & time_ANN) =0;
 		virtual std::vector<std::string> NN(const K &query, std::ofstream &outputfile, double &distance_NN) =0;
 		virtual void RS(const K &query, int c, double R, std::vector<int>& labels, int cluster) = 0;
@@ -141,6 +142,8 @@ class HashTable_EUC : public HashTable<K>
             	}
         	} 
     	}
+
+		std::vector<int> recommendationANN(const K &query, int max_neighbours){}
 
 		/*== Neighbour functions*/
 		std::vector<std::string> NN(const K &query, std::ofstream &outputfile, double &distance_NN)
@@ -439,6 +442,62 @@ class HashTable_COS : public HashTable<K>
 			
 		}
 
+		/*== find closest neighbours for recommendation*/
+		std::vector<int> recommendationANN(const K &query, int max_neighbours)
+		{
+			std::vector<int> neighbours;
+			std::vector<double> neighbour_distances;
+			std::vector<int> neighbour_ids;
+
+			int hash_val = hash_function->hashValue(query);
+			HashNode<K> * temp = this->table[hash_val];
+
+			/*== iterate through the bucket & calculate all the distances*/
+			while(temp != NULL)
+			{
+				/*== if vector is 0 cosine similarity is undefined*/
+				if (help_functions::vectorIsZero(temp->getKey()))
+				{
+					temp = temp->getNext();
+
+					continue;
+				}
+
+				/*== calculate distance*/
+				double distance = help_functions::cosine_distance(query, temp->getKey());
+
+				neighbour_distances.push_back(distance);
+				neighbour_ids.push_back(stoi(temp->getId()));
+
+				temp = temp->getNext();
+			}
+
+			for(unsigned int i=0; i<max_neighbours; i++)
+			{
+				if(neighbour_distances.size() < i)
+					break;
+
+				/*== calculate the minimum element of the vector*/
+				int index=0;
+				double min_distance = neighbour_distances.at(0);
+				for(unsigned int j=1; j<neighbour_distances.size(); j++)
+				{
+					if(min_distance > neighbour_distances.at(j))
+					{
+						min_distance = neighbour_distances.at(j);
+						index = j;
+					}
+				}
+
+				/*== assign its id to neighbours vector*/
+				neighbours.push_back( neighbour_ids.at(index) );
+
+				neighbour_distances.at(index) = INT_MAX;
+			}
+
+			return neighbours;
+		}
+
 		/*== Neighbour functions*/
 		std::vector<std::string> NN(const K &query,std::ofstream &outputfile, double &distance_NN)
 		{
@@ -609,6 +668,41 @@ class HashTable_COS : public HashTable<K>
 
 		void loyds_unassigned(const std::vector<K> &queries, std::vector<int>& labels)
 		{
+			HashNode<K> * temp;
+
+			for(int i=0; i<this->tableSize; i++)
+			{
+				temp = this->table[i];
+				while(temp != NULL)
+				{
+					/*== assign unassigned point*/
+					if(temp->getAssigned() == 0)
+					{
+						double min_distance = INT_MAX;
+						double distance;
+						int cluster;
+
+						for(unsigned int j=0; j<queries.size(); j++)
+						{
+							distance = help_functions::cosine_distance(queries[j], temp->getKey());
+
+							if(distance<min_distance)
+							{
+								min_distance = distance;
+								cluster = j;
+							}
+						}
+
+						labels[stoi(temp->getId())-1] = cluster;
+					}
+
+					/*== reset assigned flag*/
+					temp->setAssigned(0);
+
+					/*== iterate to the next hash node*/
+					temp = temp->getNext();
+				}
+			}
 			
 		}
 

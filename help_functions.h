@@ -70,7 +70,7 @@ namespace help_functions
 		double distance = 0;
 
 		for(unsigned int i=0; i<vector1.size(); i++)
-			distance += pow(vector1[i] - vector2[i], 2);
+			distance += (vector1[i] - vector2[i]) * (vector1[i] - vector2[i]);
 
 		return sqrt(distance);
 	}
@@ -88,8 +88,8 @@ namespace help_functions
 		for(unsigned int i=0; i<vector1.size(); i++)
 		{
 			dot_product += vector1[i]*vector2[i];
-			length1 += pow(vector1[i], 2);
-			length2 += pow(vector2[i], 2);
+			length1 += vector1[i] * vector1[i];
+			length2 += vector2[i] * vector2[i];
 		}
 
 		length_product = sqrt(length1*length2);
@@ -112,6 +112,18 @@ namespace help_functions
   		}
 
  		return dist;
+	}
+
+	inline bool vectorIsZero(std::vector<double> v)
+	{
+		double length=0;
+		for(unsigned int i=0; i<v.size(); i++)
+			length += v[i]*v[i];
+
+		if(length)
+			return false;
+
+		return true;
 	}
 
 	inline int calculate_dimensions(std::ifstream& infile)
