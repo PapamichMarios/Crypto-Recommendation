@@ -40,13 +40,14 @@ int main(int argc, char** argv)
 	vector<vector<double>> users = createUserVector(argv[inputFileIndex], vaderLexicon, cryptos);
 
 	/*== normalize user vectors*/
-	normalisation(users);
+	vector<vector<double>> normalisedUsers = users;
+	normalisation(normalisedUsers);
 
-	/*== create and fill hash table*/
-	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, argv, inputFileIndex, k, L);
+	for(unsigned int i=0; i<users.size(); i++)
+		users.at(i) = eliminateUnknown(users.at(i));
 
-	/*== get closest neighbours cosine LSH*/
-	recommendationLSH(hash_tableptr, users, cryptosIndex, L, argv[outputFileIndex]);
+	/*== recommendation process using LSH*/
+	recommendationLSHProcess(users, normalisedUsers, cryptosIndex, k, L, argv, inputFileIndex, outputFileIndex);
 
 	exit(EXIT_SUCCESS);	
 }

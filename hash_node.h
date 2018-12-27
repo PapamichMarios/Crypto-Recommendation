@@ -6,22 +6,26 @@ class HashNode
 {
 	private:
     	K key;
+		K prenormalisedKey;
     	std::string G;
 		HashNode *next;
 		std::string id;
 		int assigned;
 
+
 	public:
-    	HashNode(const K &key, const std::string G, const std::string id) : key(key), G(G), next(NULL), id(id), assigned(0) { }
+    	HashNode(const K &key, const K &prenormalisedKey, const std::string G, const std::string id) : key(key), prenormalisedKey(prenormalisedKey), G(G), next(NULL), id(id), assigned(0) { }
 		
-		~HashNode()
-		{
-			
-		}
+		~HashNode(){}
 
 		K getKey()
 		{
 			return this->key;
+		}
+
+		K getPrenormalisedKey()
+		{
+			return this->prenormalisedKey;
 		}
 
 		void setAssigned(int x)

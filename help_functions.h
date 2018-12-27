@@ -103,6 +103,7 @@ namespace help_functions
 		return true;
 	}
 
+
 	inline int calculate_dimensions(std::ifstream& infile)
 	{
 		int dimensions=0;
@@ -175,6 +176,37 @@ namespace help_functions
 		infile.seekg(0, std::ios::beg);
 
 		return type;
+	}
+
+	inline std::vector<double> single_normalisation(std::vector<double> user)
+	{
+		/*== find R(u)*/
+		double average = 0.0;
+		int average_counter = 0;
+		for(unsigned int j=0; j<user.size(); j++)
+		{
+			if(user.at(j) == INT_MAX)
+				continue;
+
+			average += user.at(j);
+			average_counter++;
+		}
+
+		average /= average_counter;
+
+		/*== turn INT_MAXs to 0s and subtract from the other numbers the average*/
+		for(unsigned int j=0; j<user.size(); j++)
+		{
+			if(user.at(j) == INT_MAX)
+			{
+				user.at(j) = 0;
+				continue;
+			}
+
+			user.at(j) -= average;
+		}
+
+		return user;
 	}
 
 }

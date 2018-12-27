@@ -13,6 +13,7 @@
 #include "help_functions.h"
 #include "fi.h"
 #include "g.h"
+#include "utilities.h"
 
 template <typename K>
 class HashTable
@@ -55,9 +56,11 @@ class HashTable
 		}
 		
 		virtual int hash(const K &key)=0;
-    	virtual void put(const K &key, std::string identifier) =0;
+    	virtual void put(const K &key, const K &prenormaliseKey, std::string identifier) =0;
 
-		virtual std::vector<int> recommendationANN(const K &query, int max_neighbours)=0;
+		virtual void recommendationANN(const K &query, int max_neighbours, std::vector<int> &all_neighbours, std::vector<double> &all_distances)=0;
+		virtual void recommendationANN_normalised(const K &query, int max_neighbours, std::vector<int> &all_neighbours, std::vector<double> &all_distances)=0;
+
 		virtual void RS(const K &query, int c, double R, std::vector<int>& labels, int cluster) = 0;
 		virtual void RS_conflict(const std::vector<K> &queries, int c, double R, std::vector<int>& labels, std::vector<int> clusters) =0;
 		virtual void loyds_unassigned(const std::vector<K> &queries, std::vector<int>& labels) =0;
@@ -109,7 +112,7 @@ class HashTable_EUC : public HashTable<K>
 			return hash_function->hashValue(key, this->tableSize);
 		}
 
-    	void put(const K &key, std::string identifier)
+    	void put(const K &key, const K &prenormalisedKey, std::string identifier)
 		{
         	int hash_val = hash_function->hashValue(key, this->tableSize);
         	HashNode<K> *prev = NULL;
@@ -124,7 +127,7 @@ class HashTable_EUC : public HashTable<K>
         	if (entry == NULL) 
 			{
 				std::string G = hash_function->computeG(key);
-            	entry = new HashNode<K>(key, G, identifier);
+            	entry = new HashNode<K>(key, prenormalisedKey, G, identifier);
 				this->buckets++;
 
             	if (prev == NULL) 
@@ -139,7 +142,8 @@ class HashTable_EUC : public HashTable<K>
         	} 
     	}
 
-		std::vector<int> recommendationANN(const K &query, int max_neighbours){}
+		void recommendationANN(const K &query, int max_neighbours, std::vector<int> &all_neighbours, std::vector<double> &all_distances){ }
+		void recommendationANN_normalised(const K &query, int max_neighbours, std::vector<int> &all_neighbours, std::vector<double> &all_distances){ }
 
 		void RS(const K &query, int c, double R, std::vector<int>& labels, int cluster)
 		{
@@ -279,7 +283,7 @@ class HashTable_COS : public HashTable<K>
 			return hash_function->hashValue(key);
 		}
 
-    	void put(const K &key, std::string identifier)
+    	void put(const K &key, const K &prenormalisedKey, std::string identifier)
 		{
         	int hash_val = hash_function->hashValue(key);
         	HashNode<K> *prev = NULL;
@@ -293,7 +297,7 @@ class HashTable_COS : public HashTable<K>
 
         	if (entry == NULL) 
 			{
-            	entry = new HashNode<K>(key, std::to_string(hash_val), identifier);
+            	entry = new HashNode<K>(key, prenormalisedKey, std::to_string(hash_val), identifier);
 				this->buckets++;
 
             	if (prev == NULL) 
@@ -309,10 +313,56 @@ class HashTable_COS : public HashTable<K>
 			
 		}
 
-		/*== find closest neighbours for recommendation*/
-		std::vector<int> recommendationANN(const K &query, int max_neighbours)
+		void recommendationANN(const K &query, int max_neighbours, std::vector<int> &all_neighbours, std::vector<double> &all_distances)
 		{
-			std::vector<int> neighbours;
+			std::vector<double> neighbour_distances;
+			std::vector<int> neighbour_ids;
+
+			int hash_val = hash_function->hashValue(query);
+			HashNode<K> * temp = this->table[hash_val];
+
+			/*== iterate through the bucket & calculate all the distances*/
+			while(temp != NULL)
+			{
+				/*== calculate distance*/
+				double distance = help_functions::cosine_distance(query, temp->getPrenormalisedKey());
+
+				neighbour_distances.push_back(distance);
+				neighbour_ids.push_back(stoi(temp->getId()));
+
+				temp = temp->getNext();
+			}
+
+			if(neighbour_ids.size() == 0)
+				return ;
+
+			for(unsigned int i=0; i<max_neighbours; i++)
+			{
+				if(neighbour_distances.size() < i)
+					break;
+
+				/*== calculate the minimum element of the vector*/
+				int index=0;
+				double min_distance = INT_MAX;
+				for(unsigned int j=0; j<neighbour_distances.size(); j++)
+				{
+					if(min_distance > neighbour_distances.at(j))
+					{
+						min_distance = neighbour_distances.at(j);
+						index = j;
+					}
+				}
+
+				/*== assign its id to neighbours vector*/
+				all_neighbours.push_back( neighbour_ids.at(index) );
+				all_distances.push_back( neighbour_distances.at(index) );
+
+				neighbour_distances.at(index) = INT_MAX;
+			}
+		}
+
+		void recommendationANN_normalised(const K &query, int max_neighbours, std::vector<int> &all_neighbours, std::vector<double> &all_distances)
+		{
 			std::vector<double> neighbour_distances;
 			std::vector<int> neighbour_ids;
 
@@ -339,6 +389,9 @@ class HashTable_COS : public HashTable<K>
 				temp = temp->getNext();
 			}
 
+			if(neighbour_ids.size() == 0)
+				return ;
+
 			for(unsigned int i=0; i<max_neighbours; i++)
 			{
 				if(neighbour_distances.size() < i)
@@ -346,8 +399,8 @@ class HashTable_COS : public HashTable<K>
 
 				/*== calculate the minimum element of the vector*/
 				int index=0;
-				double min_distance = neighbour_distances.at(0);
-				for(unsigned int j=1; j<neighbour_distances.size(); j++)
+				double min_distance = INT_MAX;
+				for(unsigned int j=0; j<neighbour_distances.size(); j++)
 				{
 					if(min_distance > neighbour_distances.at(j))
 					{
@@ -357,12 +410,11 @@ class HashTable_COS : public HashTable<K>
 				}
 
 				/*== assign its id to neighbours vector*/
-				neighbours.push_back( neighbour_ids.at(index) );
+				all_neighbours.push_back( neighbour_ids.at(index) );
+				all_distances.push_back( neighbour_distances.at(index) );
 
 				neighbour_distances.at(index) = INT_MAX;
 			}
-
-			return neighbours;
 		}
 
 		void RS(const K &query, int c, double R, std::vector<int>& labels, int cluster)
