@@ -199,13 +199,17 @@ vector<vector<double>> createUserVector(string inputfile, map<string, float> vad
 		if(user != temp_user)
 			index++;
 
+		temp_user = user;
+
 		/*== eval each word and get the sentimental score using vaderLexicon map*/
 		double sentiment_score=0.0;
+		bool wordFound = false;
 		vector<int> cryptoReferenced;
 		while (getline(iss, word, '\t'))
 		{
 			try {
 				sentiment_score += vaderLexicon.at(word);
+				wordFound = true;
 			}catch (const std::exception& e) {
 				try{
 					cryptoReferenced.push_back( cryptos.at(word) );
@@ -214,6 +218,9 @@ vector<vector<double>> createUserVector(string inputfile, map<string, float> vad
 				}
 			}
 		}
+
+		if(wordFound == false)
+			continue;
 
 		/*== sentiment score normalisation*/
 		sentiment_score = sentiment_score/sqrt(sentiment_score*sentiment_score + ALPHA);
@@ -226,13 +233,42 @@ vector<vector<double>> createUserVector(string inputfile, map<string, float> vad
 
 			users.at(index).at(cryptoReferenced.at(i)) += sentiment_score;
 		}
-
-		temp_user = user;
 	}
 
 	infile.close();	
 
 	return users;
+}
+
+vector<double> single_normalisation(vector<double> user)
+{
+	/*== find R(u)*/
+	double average = 0.0;
+	int average_counter = 0;
+	for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
+	{
+		if(user.at(j) == INT_MAX)
+			continue;
+
+		average += user.at(j);
+		average_counter++;
+	}
+
+	average /= average_counter;
+
+	/*== turn INT_MAXs to 0s and subtract from the other numbers the average*/
+	for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
+	{
+		if(user.at(j) == INT_MAX)
+		{
+			user.at(j) = 0;
+			continue;
+		}
+
+		user.at(j) -= average;
+	}
+
+	return user;
 }
 
 void normalisation(vector<vector<double>> &users)
@@ -346,4 +382,15 @@ bool vectorIsZero(vector<double> v)
 		return false;
 
 	return true;
+}
+
+vector<double> eliminateUnknown(vector<double> user)
+{
+	for(unsigned int i=0; i<100; i++)
+	{
+		if(user.at(i) == INT_MAX)
+			user.at(i) = 0;
+	}
+
+	return user;
 }

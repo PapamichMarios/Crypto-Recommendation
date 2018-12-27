@@ -1,7 +1,7 @@
 CPP      = g++
 OBJ      = recommendation.o recommendationLSH.o utilities.o g.o fi.o hyperplane.o
 BIN      = recommendation
-CFLAGS   = -g -std=c++11
+CFLAGS   = -g -std=c++11 -O2
 
 $(BIN): $(OBJ)
 	$(CPP) -o $(BIN) $(OBJ) $(CFLAGS)
