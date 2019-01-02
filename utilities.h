@@ -20,10 +20,14 @@ void normalisation(std::vector<std::vector<double>> &users);
 std::vector<double> single_normalisation(std::vector<double> user);
 bool vectorIsZero(std::vector<double> v);
 
-
+/*== print functions*/
 void printRecommendation(std::map<int, std::string> cryptos, std::vector<int> recommendations, int user, std::string outputfile);
+void printUnmatched(std::map<int, std::string> cryptos, int user, std::string outputfile);
 void printRecommendationTitle(std::string outputfile, std::string title);
 void printRecommendationTimer(std::string outputfile, double time);
+void printRecommendationMAE(std::string outputfile, std::string text, double MAE);
+
 void resetOutput(std::string outputfile);
 
+double cosine_similarity(const std::vector<double> vector1, const std::vector<double> vector2);
 #endif

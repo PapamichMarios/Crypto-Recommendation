@@ -5,18 +5,17 @@
 
 #include "hash_table.h"
 
-void recommendationLSHProcess(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, std::map<int, std::string> cryptosIndex, int k, int L, char ** argv, short int inputFileIndex, short int outputFileIndex);
+void recommendationLSH(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, std::map<int, std::string> cryptosIndex, int k, int L, std::string inputfile, std::string outputfile);
 
-HashTable<std::vector<double>> ** createAndFillHashTable(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, char ** argv, short int inputFileIndex, int k, int L);
+HashTable<std::vector<double>> ** createAndFillHashTable(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, std::string inputfile, int k, int L);
 
-void recommendationLSH(HashTable<std::vector<double>> ** hash_tableptr, std::vector<double> user, std::vector<double> normalisedUser, int userIndex, std::vector<std::vector<double>> users, std::map<int, std::string> cryptos, int L, std::string outputfile, bool normalised);
+std::vector<double> LSH_calculateRatings(HashTable<std::vector<double>> ** hash_tableptr, std::vector<double> user, std::vector<double> normalisedUser, std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, int L, bool normalised);
 
-void groupNeighboursFromTables(std::vector<std::vector<int>> all_neighbours, std::vector<std::vector<double>> all_distances, std::vector<int> &neighbours_unique, std::vector<double> &neighbours_distance, int L);
+void LSH_groupNeighboursFromTables(std::vector<std::vector<int>> all_neighbours, std::vector<std::vector<double>> all_distances, std::vector<int> &neighbours_unique, std::vector<double> &neighbours_distance, int L);
 
-void calculateNeighbourhood(std::vector<std::vector<int>> all_neighbours, std::vector<std::vector<double>> all_distances, std::vector<int> &neighbours, std::vector<double> &similarity, int L);
+void LSH_calculateNeighbourhood(std::vector<std::vector<int>> all_neighbours, std::vector<std::vector<double>> all_distances, std::vector<int> &neighbours, std::vector<double> &similarity, int L);
 
-std::vector<int> cryptosRecommendedByNeighbourhood(std::vector<double> user);
+void LSH_predictUnknownCryptos(std::vector<double> &user, std::vector<double> normalisedUser, std::vector<std::vector<double>> users, std::vector<double> similarity, std::vector<int> neighbours);
 
-void predictUnknownCryptos(std::vector<double> &user, std::vector<double> normalisedUser, std::vector<std::vector<double>> users, std::vector<double> similarity, std::vector<int> neighbours);
-void predictUnknownCryptos_normalised(std::vector<double> &user, std::vector<std::vector<double>> users, std::vector<double> similarity, std::vector<int> neighbours);
+void unallocateHashTable(HashTable<std::vector<double>> ** hash_tableptr, int L);
 #endif

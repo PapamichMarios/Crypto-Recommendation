@@ -145,10 +145,19 @@ map<int, string> cryptosIndexMap()
 
     while(getline(infile, line))
     {
+		int j=0;
+		string name;
         istringstream iss(line);
 		while(getline(iss, key, '\t'))
-			cryptos.insert(pair<int, string>(i,key));
+		{
+			/*== get the 1st or 5th column for the crypto name*/
+			if( j==0 || j==4)
+				name = key;
 
+			j++;
+		}
+	
+		cryptos.insert(pair<int, string>(i,name));
 		i++;
     }
 
@@ -203,13 +212,11 @@ vector<vector<double>> createUserVector(string inputfile, map<string, float> vad
 
 		/*== eval each word and get the sentimental score using vaderLexicon map*/
 		double sentiment_score=0.0;
-		bool wordFound = false;
 		vector<int> cryptoReferenced;
 		while (getline(iss, word, '\t'))
 		{
 			try {
 				sentiment_score += vaderLexicon.at(word);
-				wordFound = true;
 			}catch (const std::exception& e) {
 				try{
 					cryptoReferenced.push_back( cryptos.at(word) );
@@ -218,9 +225,6 @@ vector<vector<double>> createUserVector(string inputfile, map<string, float> vad
 				}
 			}
 		}
-
-		if(wordFound == false)
-			continue;
 
 		/*== sentiment score normalisation*/
 		sentiment_score = sentiment_score/sqrt(sentiment_score*sentiment_score + ALPHA);
@@ -323,6 +327,22 @@ void printRecommendation(map<int, string> cryptos, vector<int> recommendations, 
 	outfile.close();
 }
 
+void printUnmatched(map<int, string> cryptos, int user, string outputfile)
+{
+	ofstream outfile;
+
+	outfile.open(outputfile, ofstream::app);
+	if(!outfile.is_open())
+	{
+		cout << "Could not open output file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	outfile << "<u" << user+1 << ">" << "Could NOT find neighbours" << endl;
+
+	outfile.close();
+}
+
 void printRecommendationTitle(string outputfile, string title)
 {
 	ofstream outfile;
@@ -352,6 +372,22 @@ void printRecommendationTimer(string outputfile, double time)
 	}
 
 	outfile << "Execution time: " << time << endl << endl;
+
+	outfile.close();
+}
+
+void printRecommendationMAE(string outputfile, string text, double MAE)
+{
+	ofstream outfile;
+
+	outfile.open(outputfile, ofstream::app);
+	if(!outfile.is_open())
+	{
+		cout << "Could not open output file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	outfile << text << ": " << MAE << endl << endl;
 
 	outfile.close();
 }
@@ -393,4 +429,23 @@ vector<double> eliminateUnknown(vector<double> user)
 	}
 
 	return user;
+}
+
+double cosine_similarity(const vector<double> vector1, const vector<double> vector2)
+{
+		double dot_product = 0;
+		
+		double length1=0, length2=0;
+		double length_product = 0;
+
+		for(unsigned int i=0; i<vector1.size(); i++)
+		{
+			dot_product += vector1[i]*vector2[i];
+			length1 += vector1[i] * vector1[i];
+			length2 += vector2[i] * vector2[i];
+		}
+
+		length_product = sqrt(length1*length2);
+
+		return dot_product/length_product;
 }
