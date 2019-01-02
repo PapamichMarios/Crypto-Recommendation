@@ -5,6 +5,7 @@
 
 #include "utilities.h"
 #include "recommendationLSH.h"
+#include "recommendationClustering.h"
 #include "hash_table.h"
 
 #define ARGS 5
@@ -15,7 +16,7 @@ int main(int argc, char** argv)
 {
 	short int inputFileIndex, outputFileIndex;
 	bool validateFlag = false;
-	int k = 8;
+	int k = 4;
 	int L = 3;
 
 	/*== check the #args*/	
@@ -43,11 +44,11 @@ int main(int argc, char** argv)
 	vector<vector<double>> normalisedUsers = users;
 	normalisation(normalisedUsers);
 
-	for(unsigned int i=0; i<users.size(); i++)
-		users.at(i) = eliminateUnknown(users.at(i));
-
 	/*== recommendation process using LSH*/
-	recommendationLSHProcess(users, normalisedUsers, cryptosIndex, k, L, argv, inputFileIndex, outputFileIndex);
+	recommendationLSH(users, normalisedUsers, cryptosIndex, k, L, argv[inputFileIndex], argv[outputFileIndex]);
+
+	/*== recommendation process using Clustering*/
+	recommendationClustering(users, normalisedUsers, cryptosIndex, argv[outputFileIndex]);
 
 	exit(EXIT_SUCCESS);	
 }

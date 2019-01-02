@@ -8,61 +8,72 @@
 #include <ctime>
 
 #include "utilities.h"
+#include "clustering_utilities.h"
 #include "help_functions.h"
 #include "recommendationLSH.h"
+#include "validation.h"
 
 #define MAX_NEIGHBOURS  	 20
-#define RECOMMENDATION_USERS 5
 #define CRYPTO_NUMBER 		 100
 
 using namespace std;
 
-void recommendationLSHProcess(vector<vector<double>> users, vector<vector<double>> normalisedUsers, map<int, string> cryptosIndex, int k, int L, char ** argv, short int inputFileIndex, short int outputFileIndex) 
+void recommendationLSH(vector<vector<double>> users, vector<vector<double>> normalisedUsers, map<int, string> cryptosIndex, int k, int L, string inputfile, string outputfile) 
 {
 	/*== create and fill hash table*/
-	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, normalisedUsers, argv, inputFileIndex, k, L);
+	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, normalisedUsers, inputfile, k, L);
 
-	printRecommendationTitle(argv[outputFileIndex], "Cosine LSH");
+	printRecommendationTitle(outputfile, "Cosine LSH");
 	time_t start_time = clock();
 
-	/*== if a vector after normalisation is a 0 vector, we have to find its neighbours before normalisation*/
+	/*== start recommendation for every user*/
 	for(unsigned int i=0; i<users.size(); i++)
 	{
 		bool normalised = true;
-		vector<double> user = single_normalisation(users.at(i));
-		vector<double> normalisedUser;
-		normalisedUser = user;
+		vector<double> normalisedUser = normalisedUsers.at(i);
 
-		if(vectorIsZero(user))
+		/*== if a vector after normalisation is 0, we have to find its neighbours before normalisation*/
+		if(vectorIsZero(normalisedUser))
 		{
 			normalised = false;
-			user = eliminateUnknown(users.at(i));
 
 			/*== if a user doesn't mention any bitcoin, we propose the first 5 bitcoins*/
-			if(vectorIsZero(user))
+			if(vectorIsZero(eliminateUnknown(users.at(i))))
 			{
-				vector<int> recommendation_ids(RECOMMENDATION_USERS);
-				for(unsigned int j=0; j<recommendation_ids.size(); j++)
-					recommendation_ids.at(j) = j;
-
-				printRecommendation(cryptosIndex, recommendation_ids, i, argv[outputFileIndex]);
-
+				printUnmatched(cryptosIndex, i, outputfile);
 				continue;
 			}
 		}
 
-		recommendationLSH(hash_tableptr, user, normalisedUser, i, users, cryptosIndex, L, argv[outputFileIndex], normalised);
+		/*== get the user ratings*/
+		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users.at(i), normalisedUser, users, normalisedUsers, L, normalised);
+		
+		/*== return the 5 best results*/
+		vector<int> recommendations =  cryptosRecommendedByNeighbourhood(average_user);
+
+		/*== print the recommended results*/
+		if(recommendations.size() > 0)
+			printRecommendation(cryptosIndex, recommendations, i, outputfile);
+		else
+			printUnmatched(cryptosIndex, i, outputfile);
 	}
 
-	printRecommendationTimer(argv[outputFileIndex], (double)(clock() - start_time)/CLOCKS_PER_SEC);
+	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
+
+	/*== validation*/
+	double MAE = F_FoldCrossValidation_LSH(hash_tableptr, L, users, normalisedUsers);
+	printRecommendationMAE(outputfile, "LSH Recommendation MAE", MAE);
+
+	/*== free hash tables*/
+	unallocateHashTable(hash_tableptr, L);
 }
 
 /*===== Create && Fill hash_tables*/
-HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users, vector<vector<double>> normalisedUsers, char ** argv, short int inputFileIndex, int k, int L)
+HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users, vector<vector<double>> normalisedUsers, string inputfile, int k, int L)
 {
 	ifstream infile;
 
-	infile.open(argv[inputFileIndex]);
+	infile.open(inputfile);
 	if(!infile.is_open())
 	{
 		cout << "Could not open input data file" << endl;
@@ -84,6 +95,11 @@ HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users
 	/*== fill the hash table with users vector*/
 	for(unsigned int i=0; i<users.size(); i++)
 	{
+		/*== ignore users with 0 crypto references*/
+		users[i] = eliminateUnknown(users[i]);
+		if( vectorIsZero(users.at(i)) )
+			continue;
+		
 		for(int j=0; j<L; j++)
 			hash_tableptr[j]->put(normalisedUsers.at(i), users.at(i), to_string(i));
 	}
@@ -94,7 +110,7 @@ HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users
 }
 
 /*== Recommendation Functions*/
-void recommendationLSH(HashTable<vector<double>> ** hash_tableptr, vector<double> user, vector<double> normalisedUser, int userIndex, vector<vector<double>> users, map<int, string> cryptos, int L, string outputfile, bool normalised)
+vector<double> LSH_calculateRatings(HashTable<vector<double>> ** hash_tableptr, vector<double> user, vector<double> normalisedUser, vector<vector<double>> users, vector<vector<double>> normalisedUsers, int L, bool normalised)
 {
 	/*== find neighbours for every hash table*/
 	vector<vector<int>> all_neighbours(L);
@@ -102,38 +118,31 @@ void recommendationLSH(HashTable<vector<double>> ** hash_tableptr, vector<double
 	for(int j=0; j<L; j++)
 	{
 		if(normalised)
-			hash_tableptr[j]->recommendationANN(user, MAX_NEIGHBOURS, all_neighbours.at(j), all_distances.at(j));
+			hash_tableptr[j]->recommendationANN_normalised(normalisedUser, MAX_NEIGHBOURS, all_neighbours.at(j), all_distances.at(j));
 		else
-			hash_tableptr[j]->recommendationANN_normalised(user, MAX_NEIGHBOURS, all_neighbours.at(j), all_distances.at(j));
+			hash_tableptr[j]->recommendationANN(eliminateUnknown(user), MAX_NEIGHBOURS, all_neighbours.at(j), all_distances.at(j));
 	}
 
 	/*== find the neighbourhood*/
 	vector<int> neighbours;
 	vector<double> similarity;
-	calculateNeighbourhood(all_neighbours, all_distances, neighbours, similarity, L);
+	LSH_calculateNeighbourhood(all_neighbours, all_distances, neighbours, similarity, L);
 
 	/*== estimate the unknown cryptos, using neighbourhood similarity*/
-	if(normalised)
-		predictUnknownCryptos_normalised(user, users, similarity, neighbours);
-	else
-		predictUnknownCryptos(user, normalisedUser, users, similarity, neighbours);
+	LSH_predictUnknownCryptos(user, normalisedUser, normalisedUsers, similarity, neighbours);
 
-	/*== get the 5 best results*/
-	vector<int> recommendation_ids = cryptosRecommendedByNeighbourhood(user);
-
-	/*== print cryptos*/
-	printRecommendation(cryptos, recommendation_ids, userIndex, outputfile);
+	return user;
 }
 
-void calculateNeighbourhood(vector<vector<int>> all_neighbours, vector<vector<double>> all_distances, vector<int> &neighbours, vector<double> &similarity, int L)
+void LSH_calculateNeighbourhood(vector<vector<int>> all_neighbours, vector<vector<double>> all_distances, vector<int> &neighbours, vector<double> &similarity, int L)
 {
 	/*== group neighbours into one vector with no duplicates*/
 	vector<int> neighbours_unique;
 	vector<double> neighbours_distance; 
-	groupNeighboursFromTables(all_neighbours, all_distances, neighbours_unique, neighbours_distance, L);
+	LSH_groupNeighboursFromTables(all_neighbours, all_distances, neighbours_unique, neighbours_distance, L);
 
 	/*== in case the neighbours we have found are less that MAX_NEIGHBOURS*/
-	if(neighbours_distance.size() < MAX_NEIGHBOURS)
+	if(neighbours_unique.size() < MAX_NEIGHBOURS)
 	{
 		neighbours = neighbours_unique;
 		similarity = neighbours_distance;
@@ -161,7 +170,7 @@ void calculateNeighbourhood(vector<vector<int>> all_neighbours, vector<vector<do
 
 }
 
-void groupNeighboursFromTables(vector<vector<int>> all_neighbours, vector<vector<double>> all_distances, vector<int> &neighbours_unique, vector<double> &neighbours_distance, int L)
+void LSH_groupNeighboursFromTables(vector<vector<int>> all_neighbours, vector<vector<double>> all_distances, vector<int> &neighbours_unique, vector<double> &neighbours_distance, int L)
 {
 	for(int j=0; j<L; j++)
 	{
@@ -183,7 +192,7 @@ void groupNeighboursFromTables(vector<vector<int>> all_neighbours, vector<vector
 	}
 }
 
-void predictUnknownCryptos(vector<double> &user, vector<double> normalisedUser, vector<vector<double>> users, vector<double> similarity, vector<int> neighbours)
+void LSH_predictUnknownCryptos(vector<double> &user, vector<double> normalisedUser, vector<vector<double>> users, vector<double> similarity, vector<int> neighbours)
 {
 	/*== find the cryptos the user has referenced*/
 	vector<int> cryptos_referenced(user.size());
@@ -191,23 +200,34 @@ void predictUnknownCryptos(vector<double> &user, vector<double> normalisedUser, 
 	for(unsigned int i=0; i<user.size(); i++)
 	{
 		if(user.at(i) != INT_MAX)
+		{
+			user.at(i) = INT_MIN;
 			cryptos_referenced.at(i) = 1;
+		}
 	}
+
+	/*== turn cosine distances gathered from LSH, to cosine similarities*/
+	for (unsigned int i=0; i<similarity.size(); i++)
+		similarity[i] = 1 - similarity[i]; 
 
 	/*== normalise user*/
 	user = normalisedUser;
 
-	/*== calculate normalisation factor z*/
-	double zeta;
+	/*== calculate normalisation factor z, using cosine similarity*/
+	double zeta=0;
 	for(unsigned int j=0; j<similarity.size(); j++)
 		zeta += abs(similarity.at(j));
 
-	zeta = 1/zeta;
+	zeta = 1/(zeta + 0.1);
 
 	/*== prediction*/ 
 	for(unsigned int j=0; j<user.size(); j++)
 	{
-		if(cryptos_referenced.at(j) != 1)
+		/*== If a user has mentioned a crypto, we dont want to recommend it by accident.
+			 We make it equal to INT_MIN so when searching for the max sentiment score 
+			 on the vector we ll have no chance to pick it
+		==*/
+		if(cryptos_referenced.at(j) == 1)
 			continue;
 
 		double similarity_factor=0;
@@ -218,50 +238,13 @@ void predictUnknownCryptos(vector<double> &user, vector<double> normalisedUser, 
 	}
 }
 
-void predictUnknownCryptos_normalised(vector<double> &user, vector<vector<double>> users, vector<double> similarity, vector<int> neighbours)
+void unallocateHashTable(HashTable<vector<double>> ** hash_tableptr, int L)
 {
-	/*== calculate normalisation factor z*/
-	double zeta;
-	for(unsigned int j=0; j<similarity.size(); j++)
-		zeta += abs(similarity.at(j));
-
-	zeta = 1/zeta;
-
-	/*== prediction*/ 
-	for(unsigned int j=0; j<user.size(); j++)
+	for(int i=0; i<L; i++)
 	{
-		if(user.at(j) != 0)
-			continue;
-
-		double similarity_factor=0;
-		for(unsigned int z=0; z<neighbours.size(); z++)
-			similarity_factor += similarity.at(z) * users.at(neighbours.at(z)).at(j);
-
-		user.at(j) = zeta * similarity_factor;
+		delete hash_tableptr[i];
+		hash_tableptr[i] = NULL;
 	}
+	delete[] hash_tableptr;
+	hash_tableptr = NULL;
 }
-
-vector<int> cryptosRecommendedByNeighbourhood(vector<double> user)
-{
-	vector<int> recommendation_ids;
-	for(unsigned int j=0; j<RECOMMENDATION_USERS; j++)
-	{
-		double max_distance = INT_MIN;
-		int index;
-		for(unsigned int z=0; z<user.size(); z++)
-		{
-			if(max_distance < user.at(z))
-			{
-				max_distance = user.at(z);
-				index = z;
-			}
-		}
-
-		recommendation_ids.push_back(index);
-		user.at(index) = INT_MIN;
-	}
-
-	return recommendation_ids;
-}
-
-

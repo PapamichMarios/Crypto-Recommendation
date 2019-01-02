@@ -333,12 +333,9 @@ class HashTable_COS : public HashTable<K>
 				temp = temp->getNext();
 			}
 
-			if(neighbour_ids.size() == 0)
-				return ;
-
 			for(unsigned int i=0; i<max_neighbours; i++)
 			{
-				if(neighbour_distances.size() < i)
+				if(neighbour_distances.size() <= i)
 					break;
 
 				/*== calculate the minimum element of the vector*/
@@ -389,12 +386,9 @@ class HashTable_COS : public HashTable<K>
 				temp = temp->getNext();
 			}
 
-			if(neighbour_ids.size() == 0)
-				return ;
-
 			for(unsigned int i=0; i<max_neighbours; i++)
 			{
-				if(neighbour_distances.size() < i)
+				if(neighbour_distances.size() <= i)
 					break;
 
 				/*== calculate the minimum element of the vector*/
