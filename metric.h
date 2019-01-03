@@ -8,6 +8,7 @@ template <typename K>
 class Metric
 {
 	public:
+		virtual ~Metric(){}
 		virtual double distance2(std::vector<K> x, std::vector<K> y)=0;
 };
 

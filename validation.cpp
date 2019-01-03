@@ -58,7 +58,7 @@ double F_FoldCrossValidation_LSH(HashTable<vector<double>> ** hash_tableptr, int
 			users[index][unknownIndex] = INT_MAX;
 
 			/*== calculate the ratings of the user based on the clusters*/
-			vector<double> average_user = LSH_calculateRatings(hash_tableptr, users[index], normalisedUsers[index], users, normalisedUsers, L, normalised);
+			vector<double> average_user = LSH_calculateRatings(hash_tableptr, users[index], normalisedUsers[index], normalisedUsers, L, normalised);
 
 			/*== compare the crypto we assigned as unknown to its real value*/
 			double predicted_sentiment = average_user[unknownIndex];

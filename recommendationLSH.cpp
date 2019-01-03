@@ -16,57 +16,10 @@
 #define MAX_NEIGHBOURS  	 20
 #define CRYPTO_NUMBER 		 100
 
+#define RECOMMENDATION_A 5
+#define RECOMMENDATION_B 2
+
 using namespace std;
-
-void recommendationLSH(vector<vector<double>> users, vector<vector<double>> normalisedUsers, map<int, string> cryptosIndex, int k, int L, string inputfile, string outputfile) 
-{
-	/*== create and fill hash table*/
-	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, normalisedUsers, inputfile, k, L);
-
-	printRecommendationTitle(outputfile, "Cosine LSH");
-	time_t start_time = clock();
-
-	/*== start recommendation for every user*/
-	for(unsigned int i=0; i<users.size(); i++)
-	{
-		bool normalised = true;
-		vector<double> normalisedUser = normalisedUsers.at(i);
-
-		/*== if a vector after normalisation is 0, we have to find its neighbours before normalisation*/
-		if(vectorIsZero(normalisedUser))
-		{
-			normalised = false;
-
-			/*== if a user doesn't mention any bitcoin, we propose the first 5 bitcoins*/
-			if(vectorIsZero(eliminateUnknown(users.at(i))))
-			{
-				printUnmatched(cryptosIndex, i, outputfile);
-				continue;
-			}
-		}
-
-		/*== get the user ratings*/
-		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users.at(i), normalisedUser, users, normalisedUsers, L, normalised);
-		
-		/*== return the 5 best results*/
-		vector<int> recommendations =  cryptosRecommendedByNeighbourhood(average_user);
-
-		/*== print the recommended results*/
-		if(recommendations.size() > 0)
-			printRecommendation(cryptosIndex, recommendations, i, outputfile);
-		else
-			printUnmatched(cryptosIndex, i, outputfile);
-	}
-
-	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
-
-	/*== validation*/
-	double MAE = F_FoldCrossValidation_LSH(hash_tableptr, L, users, normalisedUsers);
-	printRecommendationMAE(outputfile, "LSH Recommendation MAE", MAE);
-
-	/*== free hash tables*/
-	unallocateHashTable(hash_tableptr, L);
-}
 
 /*===== Create && Fill hash_tables*/
 HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users, vector<vector<double>> normalisedUsers, string inputfile, int k, int L)
@@ -110,7 +63,7 @@ HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users
 }
 
 /*== Recommendation Functions*/
-vector<double> LSH_calculateRatings(HashTable<vector<double>> ** hash_tableptr, vector<double> user, vector<double> normalisedUser, vector<vector<double>> users, vector<vector<double>> normalisedUsers, int L, bool normalised)
+vector<double> LSH_calculateRatings(HashTable<vector<double>> ** hash_tableptr, vector<double> user, vector<double> normalisedUser, vector<vector<double>> normalisedUsers, int L, bool normalised)
 {
 	/*== find neighbours for every hash table*/
 	vector<vector<int>> all_neighbours(L);
@@ -247,4 +200,86 @@ void unallocateHashTable(HashTable<vector<double>> ** hash_tableptr, int L)
 	}
 	delete[] hash_tableptr;
 	hash_tableptr = NULL;
+}
+
+/*=== 1 ===*/
+void recommendationLSH(vector<vector<double>> users, vector<vector<double>> normalisedUsers, map<int, string> cryptosIndex, int k, int L, string inputfile, string outputfile) 
+{
+	/*== create and fill hash table*/
+	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(users, normalisedUsers, inputfile, k, L);
+
+	printRecommendationTitle(outputfile, "Cosine LSH");
+	time_t start_time = clock();
+
+	/*== start recommendation for every user*/
+	for(unsigned int i=0; i<users.size(); i++)
+	{
+		bool normalised = true;
+		vector<double> normalisedUser = normalisedUsers.at(i);
+		if (!recommendationEligibility(normalised, normalisedUser, users.at(i)))
+		{
+			printUnmatched(cryptosIndex, i, outputfile);
+			continue;
+		}
+
+		/*== get the user ratings*/
+		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users.at(i), normalisedUser, normalisedUsers, L, normalised);
+		
+		/*== return the 5 best results*/
+		vector<int> recommendations =  cryptosRecommendedByNeighbourhood(average_user);
+
+		/*== print the recommended results*/
+		if(recommendations.size() > 0)
+			printRecommendation(cryptosIndex, recommendations, i, outputfile, RECOMMENDATION_A);
+		else
+			printUnmatched(cryptosIndex, i, outputfile);
+	}
+
+	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
+
+	/*== validation*/
+	double MAE = F_FoldCrossValidation_LSH(hash_tableptr, L, users, normalisedUsers);
+	printRecommendationMAE(outputfile, "LSH Recommendation MAE", MAE);
+
+	/*== free hash tables*/
+	unallocateHashTable(hash_tableptr, L);
+}
+
+/*=== 2 ===*/
+void recommendationLSH(vector<vector<double>> users, vector<vector<double>> normalisedUsers, vector<vector<double>> virtual_users, vector<vector<double>> normalised_virtual_users, map<int, string> cryptosIndex, int k, int L, string inputfile, string outputfile) 
+{
+	/*== create and fill hash table with virtual users*/
+	HashTable<vector<double>> ** hash_tableptr = createAndFillHashTable(virtual_users, normalised_virtual_users, inputfile, k, L);
+
+	printRecommendationTitle(outputfile, "Cosine LSH");
+	time_t start_time = clock();
+
+	/*== start recommendation for every user*/
+	for(unsigned int i=0; i<users.size(); i++)
+	{
+		bool normalised = true;
+		vector<double> normalisedUser = normalisedUsers.at(i);
+		if ( !recommendationEligibility(normalised, normalisedUser, users.at(i)))
+		{
+			printUnmatched(cryptosIndex, i, outputfile);
+			continue;
+		}
+
+		/*== get the user ratings*/
+		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users.at(i), normalisedUser, normalisedUsers, L, normalised);
+		
+		/*== return the 5 best results*/
+		vector<int> recommendations =  cryptosRecommendedByNeighbourhood(average_user);
+
+		/*== print the recommended results*/
+		if(recommendations.size() > 0)
+			printRecommendation(cryptosIndex, recommendations, i, outputfile, RECOMMENDATION_B);
+		else
+			printUnmatched(cryptosIndex, i, outputfile);
+	}
+
+	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
+
+	/*== free hash tables*/
+	unallocateHashTable(hash_tableptr, L);
 }

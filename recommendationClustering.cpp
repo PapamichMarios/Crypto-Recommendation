@@ -6,56 +6,13 @@
 #include "utilities.h"
 #include "validation.h"
 
+#define CLUSTER_USERS 50
+#define CLUSTER_ALL   5
+
+#define RECOMMENDATION_A 5
+#define RECOMMENDATION_B 2
+
 using namespace std;
-
-void recommendationClustering(vector<vector<double>> users, vector<vector<double>> normalisedUsers, map<int, string> cryptosIndex, string outfile)
-{
-	printRecommendationTitle(outfile, "Clustering");
-	time_t start_time = clock();
-
-	/*== cluster users*/
-	vector<vector<double>> centroids;
-	vector<int> labels;	
-	k_meanspp(normalisedUsers, centroids, labels);
-
-	/*== recommendation*/
-	for(unsigned int i=0; i<users.size(); i++)
-	{
-		bool normalised = true;
-		vector<double> normalisedUser = normalisedUsers.at(i);
-
-		/*== if a vector after normalisation is 0, we have to find its neighbours before normalisation*/
-		if(vectorIsZero(normalisedUser))
-		{
-			normalised = false;
-
-			/*== if a user doesn't mention any bitcoin, we propose the first 5 bitcoins*/
-			if(vectorIsZero(eliminateUnknown(users.at(i))))
-			{
-				printUnmatched(cryptosIndex, i, outfile);
-				continue;
-			}
-		}
-
-		/*== get the user ratings*/
-		vector<double> average_user = Clustering_calculateRatings(users.at(i), normalisedUser, i, users, normalisedUsers, labels, normalised);
-
-		/*== get the 5 best results*/
-		vector<int> recommendations = cryptosRecommendedByNeighbourhood(average_user);
-
-		/*== print prediction*/
-		if(recommendations.size() > 0)
-			printRecommendation(cryptosIndex, recommendations, i, outfile);
-		else
-			printUnmatched(cryptosIndex, i, outfile);
-	}
-
-	printRecommendationTimer(outfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
-
-	/*== validation*/
-	double MAE = F_FoldCrossValidation_Clustering(users, normalisedUsers, labels);
-	printRecommendationMAE(outfile, "Clustering Recommendation MAE", MAE);
-}
 
 vector<double> Clustering_calculateRatings(vector<double> user, vector<double> normalisedUser, int userIndex, vector<vector<double>> users, vector<vector<double>> normalisedUsers, vector<int> labels, bool normalised)
 {
@@ -126,4 +83,84 @@ vector<double> Clustering_calculateRatings(vector<double> user, vector<double> n
 	}
 
 	return user;
+}
+
+/*==== 1. */
+void recommendationClustering(vector<vector<double>> users, vector<vector<double>> normalisedUsers, map<int, string> cryptosIndex, string outfile)
+{
+	printRecommendationTitle(outfile, "Clustering");
+	time_t start_time = clock();
+
+	/*== cluster users*/
+	vector<int> labels = k_meanspp(normalisedUsers, CLUSTER_USERS);
+
+	/*== recommendation*/
+	for(unsigned int i=0; i<users.size(); i++)
+	{
+		bool normalised = true;
+		vector<double> normalisedUser = normalisedUsers.at(i);
+		if (!recommendationEligibility(normalised, normalisedUser, users.at(i)))
+		{
+			printUnmatched(cryptosIndex, i, outfile);
+			continue;
+		}
+
+		/*== get the user ratings*/
+		vector<double> average_user = Clustering_calculateRatings(users.at(i), normalisedUser, i, users, normalisedUsers, labels, normalised);
+
+		/*== get the 5 best results*/
+		vector<int> recommendations = cryptosRecommendedByNeighbourhood(average_user);
+
+		/*== print prediction*/
+		if(recommendations.size() > 0)
+			printRecommendation(cryptosIndex, recommendations, i, outfile, RECOMMENDATION_A);
+		else
+			printUnmatched(cryptosIndex, i, outfile);
+	}
+
+	printRecommendationTimer(outfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
+
+	/*== validation*/
+	double MAE = F_FoldCrossValidation_Clustering(users, normalisedUsers, labels);
+	printRecommendationMAE(outfile, "Clustering Recommendation MAE", MAE);
+}
+
+/*==== 2. */
+void recommendationClustering(vector<vector<double>> users, vector<vector<double>> normalisedUsers, vector<vector<double>> virtual_users, vector<vector<double>> normalised_virtual_users, map<int, string> cryptosIndex, string outfile)
+{
+	printRecommendationTitle(outfile, "Clustering");
+	time_t start_time = clock();
+
+	/*== recommendation*/
+	for(unsigned int i=0; i<users.size(); i++)
+	{
+		bool normalised = true;
+		vector<double> normalisedUser = normalisedUsers.at(i);
+		if ( !recommendationEligibility(normalised, normalisedUser, users.at(i)) )
+		{
+			printUnmatched(cryptosIndex, i, outfile);
+			continue;
+		}
+
+		/*== create a vector with virtual users + the user we want to recommend*/
+		vector<vector<double>> all_users;
+		all_users = normalised_virtual_users;
+		all_users.push_back(normalisedUser);
+
+		vector<int> labels = k_meanspp(all_users, CLUSTER_ALL);
+
+		/*== get the user ratings*/
+		vector<double> average_user = Clustering_calculateRatings(users.at(i), normalisedUser, labels.size()-1, virtual_users, normalised_virtual_users, labels, normalised);
+
+		/*== get the 5 best results*/
+		vector<int> recommendations = cryptosRecommendedByNeighbourhood(average_user);
+
+		/*== print prediction*/
+		if(recommendations.size() > 0)
+			printRecommendation(cryptosIndex, recommendations, i, outfile, RECOMMENDATION_B);
+		else
+			printUnmatched(cryptosIndex, i, outfile);
+	}
+
+	printRecommendationTimer(outfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
 }

@@ -333,7 +333,7 @@ class HashTable_COS : public HashTable<K>
 				temp = temp->getNext();
 			}
 
-			for(unsigned int i=0; i<max_neighbours; i++)
+			for(int i=0; i<max_neighbours; i++)
 			{
 				if(neighbour_distances.size() <= i)
 					break;
@@ -386,7 +386,7 @@ class HashTable_COS : public HashTable<K>
 				temp = temp->getNext();
 			}
 
-			for(unsigned int i=0; i<max_neighbours; i++)
+			for(int i=0; i<max_neighbours; i++)
 			{
 				if(neighbour_distances.size() <= i)
 					break;
