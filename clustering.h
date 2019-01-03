@@ -5,7 +5,7 @@
 
 #include <vector>
 
-void k_meanspp(std::vector<std::vector<double>> users, std::vector<std::vector<double>> &centroids, std::vector<int> &labels);
+std::vector<int> k_meanspp(std::vector<std::vector<double>> users, int clusters);
 
 std::vector<std::vector<double>> initialisation(std::vector<std::vector<double>> data, int data_size, int clusters);
 

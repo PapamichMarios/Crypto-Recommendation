@@ -14,7 +14,6 @@
 #define CRYPTOS				 "coins_queries.csv"
 #define ALPHA				 15
 #define MAX_NEIGHBOURS  	 20
-#define RECOMMENDATION_USERS 5
 #define CRYPTO_NUMBER 		 100
 
 using namespace std;
@@ -28,7 +27,7 @@ void rerunCheck(int argc, int args)
 	}
 }
 
-void getInlineArguments(int argc, char** argv, short int &inputFileIndex, short int &outputFileIndex, bool &validateFlag)
+void getInlineArguments(int argc, char** argv, short int &inputFileIndex, short int &outputFileIndex, bool &validateFlag, short int &tweetsFileIndex)
 {
 	int opt;
 
@@ -37,6 +36,7 @@ void getInlineArguments(int argc, char** argv, short int &inputFileIndex, short 
 	{
 		{"d"	 	, required_argument, NULL, 'd'},
 		{"o"	 	, required_argument, NULL, 'o'},
+		{"t"		, required_argument, NULL, 't'},
 		{"validate" , no_argument, NULL, 'v'},
 		{0, 0, 0, 0}
 	};
@@ -51,6 +51,9 @@ void getInlineArguments(int argc, char** argv, short int &inputFileIndex, short 
             case 'o':
                 outputFileIndex = optind-1;
                 break;
+			case 't':
+				tweetsFileIndex = optind-1;
+				break;
 			case 'v':
 				validateFlag = true;
 				break;
@@ -244,35 +247,145 @@ vector<vector<double>> createUserVector(string inputfile, map<string, float> vad
 	return users;
 }
 
-vector<double> single_normalisation(vector<double> user)
+vector<vector<double>> createTweetVector(string inputfile)
 {
-	/*== find R(u)*/
-	double average = 0.0;
-	int average_counter = 0;
-	for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
-	{
-		if(user.at(j) == INT_MAX)
-			continue;
+	ifstream infile;
 
-		average += user.at(j);
-		average_counter++;
+	/*== find out how many twits we have*/
+	int lines = getInputLines(inputfile);
+
+	infile.open(inputfile);
+	if(!infile.is_open())
+	{
+		cout << "Could not open input data file" << endl;
+		exit(EXIT_FAILURE);
 	}
 
-	average /= average_counter;
+	int index=0;
+	string line;
+	string twitter_id, sentiment;
+	vector<vector<double>> twits(lines);
 
-	/*== turn INT_MAXs to 0s and subtract from the other numbers the average*/
-	for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
+	/*== eval each word and get the sentimental score using vaderLexicon map*/
+	while(getline(infile, line))
 	{
-		if(user.at(j) == INT_MAX)
+		istringstream iss(line);
+		getline(iss, twitter_id, ',');
+		while(getline(iss, sentiment, ','))
+			twits[index].push_back(stod(sentiment));
+		
+		index++;
+	}
+
+	infile.close();
+
+	return twits;
+}
+
+map<int, vector<double>> createTweetMap(string inputfile, map<string, float> vaderLexicon, map<string, int> cryptos)
+{
+	ifstream infile;
+
+	/*== find out how many tweets we have*/
+	int lines = getInputLines(inputfile);
+
+	infile.open(inputfile);
+	if(!infile.is_open())
+	{
+		cout << "Could not open input data file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	string line;
+	string user, twitter_id, word;
+	map<int, vector<double>> twits_map;
+	/*== eval each word and get the sentimental score using vaderLexicon map*/
+	while(getline(infile, line))
+	{
+		vector<double> twit(CRYPTO_NUMBER, INT_MAX);
+		istringstream iss(line);
+		getline(iss, user, '\t');
+		getline(iss, twitter_id, '\t');
+
+		double sentiment_score=0.0;
+		vector<int> cryptoReferenced;
+		while (getline(iss, word, '\t'))
 		{
-			user.at(j) = 0;
-			continue;
+			try {
+				sentiment_score += vaderLexicon.at(word);
+			}catch (const std::exception& e) {
+				try{
+					cryptoReferenced.push_back( cryptos.at(word) );
+				}catch (const std::exception& e){
+					continue;
+				}
+			}
 		}
 
-		user.at(j) -= average;
+		/*== sentiment score normalisation*/
+		sentiment_score = sentiment_score/sqrt(sentiment_score*sentiment_score + ALPHA);
+
+		/*== update the user vector depending on the cryptos he referenced in his tweets*/
+		for(unsigned int i=0; i<cryptoReferenced.size(); i++)
+		{
+			if(twit.at(cryptoReferenced.at(i)) == INT_MAX)
+				twit.at(cryptoReferenced.at(i)) = 0;
+
+			twit.at(cryptoReferenced.at(i)) += sentiment_score;
+		}
+
+		twits_map.insert(pair<int, vector<double>>(stoi(twitter_id)-1, twit));
 	}
 
-	return user;
+	infile.close();
+
+	return twits_map;
+}
+
+int getInputLines(string inputfile)
+{
+	ifstream infile;
+	string line;
+	int lines=0;
+
+	infile.open(inputfile);
+	if(!infile.is_open())
+	{
+		cout << "Could not open input data file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	while(getline(infile, line))
+		lines++;
+
+	infile.close();
+
+	return lines;
+}
+
+vector<vector<double>> createVirtualUsers(map<int, vector<double>> tweets, vector<int> labels, int cluster_size, int crypto_size)
+{
+	vector<vector<double>> virtual_users(cluster_size, vector<double>(crypto_size, 0));
+	for(auto &tweet : tweets)
+	{
+		tweet.second = eliminateUnknown(tweet.second);
+		for(unsigned int j=0; j<100; j++)
+			virtual_users[labels[tweet.first]][j] += tweet.second[j];
+	}
+
+	return virtual_users;
+}
+
+vector<vector<double>> createVirtualUsersNormalised(map<int, vector<double>> tweets, vector<int> labels, int cluster_size, int crypto_size)
+{
+	vector<vector<double>> virtual_users(cluster_size, vector<double>(crypto_size, 0));
+	for(auto &tweet : tweets)
+	{
+		for(unsigned int j=0; j<100; j++)
+			virtual_users[labels[tweet.first]][j] += tweet.second[j];
+	}
+
+	return virtual_users;
 }
 
 void normalisation(vector<vector<double>> &users)
@@ -307,7 +420,39 @@ void normalisation(vector<vector<double>> &users)
 	}
 }
 
-void printRecommendation(map<int, string> cryptos, vector<int> recommendations, int user, string outputfile)
+void normalisation(map<int, vector<double>> &tweets)
+{
+	for (auto &tweet : tweets)
+	{
+		/*== find R(u)*/
+		double average = 0;
+		int average_counter = 0;
+		for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
+		{
+			if (tweet.second.at(j) == INT_MAX)
+				continue;
+
+			average += tweet.second.at(j);
+			average_counter++;
+		}
+
+		average /= average_counter;
+		
+		/*== turn INT_MAXs to 0s and subtract from the other numbers the average*/
+		for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
+		{
+			if(tweet.second.at(j) == INT_MAX)
+			{
+				tweet.second.at(j) = 0;
+				continue;
+			}
+
+			tweet.second.at(j) -= average;
+		}
+	}
+}
+
+void printRecommendation(map<int, string> cryptos, vector<int> recommendations, int user, string outputfile, int how_many)
 {
 	ofstream outfile;
 
@@ -319,7 +464,7 @@ void printRecommendation(map<int, string> cryptos, vector<int> recommendations, 
 	}
 
 	outfile << "<u" << user+1 << ">";
-	for (unsigned int j=0; j<RECOMMENDATION_USERS; j++)
+	for (unsigned int j=0; j<how_many; j++)
 		outfile << cryptos.at(recommendations.at(j)) << " ";
 
 	outfile << endl;
@@ -448,4 +593,19 @@ double cosine_similarity(const vector<double> vector1, const vector<double> vect
 		length_product = sqrt(length1*length2);
 
 		return dot_product/length_product;
+}
+
+bool recommendationEligibility(bool &normalised, vector<double> &normalisedUser, vector<double> &user)
+{
+	/*== if a vector after normalisation is 0, we have to find its neighbours before normalisation*/
+	if(vectorIsZero(normalisedUser))
+	{
+		normalised = false;
+
+		/*== if a user doesn't mention any bitcoin, we propose the first 5 bitcoins*/
+		if(vectorIsZero(eliminateUnknown(user)))
+			return false;
+	}
+
+	return true;
 }

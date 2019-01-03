@@ -6,13 +6,15 @@
 #include "utilities.h"
 #include "clustering_utilities.h"
 
-#define CLUSTERS 			100
 #define MAX_PROCESS_LOOPS 	30
 
 using namespace std;
 
-void k_meanspp(vector<vector<double>> users, vector<vector<double>> &centroids, vector<int> &labels)
+vector<int> k_meanspp(vector<vector<double>> users, int clusters)
 {
+	vector<int> labels;
+	vector<vector<double>> centroids;
+
 	/*== create metric object, we use euclidean metric*/
 	Metric<double> * metric_ptr = getMetric("euclidean");
 
@@ -20,15 +22,16 @@ void k_meanspp(vector<vector<double>> users, vector<vector<double>> &centroids, 
 	vector<vector<double>> new_users;
 	for(unsigned int i=0; i<users.size(); i++)
 	{
-		if(vectorIsZero(eliminateUnknown(users[i])))
+		if(!vectorIsZero(eliminateUnknown(users[i])))
 			new_users.push_back(users[i]);
 	}
-	
 
 	users = new_users;
-	/*== clustering process*/
-	centroids = initialisation(users, users.size(), CLUSTERS);
 
+	/*== initialisation*/
+	centroids = initialisation(users, users.size(), clusters);
+
+	/*== assignment && update*/
 	long double objective_function=0;
 	long double last_objective_function =0;
 	int loops=0;
@@ -44,7 +47,10 @@ void k_meanspp(vector<vector<double>> users, vector<vector<double>> &centroids, 
 
 	} while( abs(objective_function - last_objective_function) > (double)1/100 && loops < MAX_PROCESS_LOOPS);
 
+	/*== memory unallocation*/
 	delete metric_ptr;
+
+	return labels;
 }
 
 /*== random initialisation*/
