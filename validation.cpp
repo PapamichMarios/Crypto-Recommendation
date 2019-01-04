@@ -11,6 +11,7 @@
 
 using namespace std;
 
+/*=== 1 ===*/
 double F_FoldCrossValidation_LSH(HashTable<vector<double>> ** hash_tableptr, int L, vector<vector<double>> users, vector<vector<double>> normalisedUsers)
 {
 	int data_size = users.size();
@@ -34,15 +35,10 @@ double F_FoldCrossValidation_LSH(HashTable<vector<double>> ** hash_tableptr, int
 
 			/*== check wether we need to ignore the vector*/
 			bool normalised = true;
-			if(vectorIsZero(normalisedUsers[index]))
+			if (!recommendationEligibility(normalised, normalisedUsers[index], users[index]) )
 			{
-				normalised = false;
-
-				if(vectorIsZero(eliminateUnknown(users[index])))
-				{
-					excluded++;
-					continue;
-				}
+				excluded++;
+				continue;
 			}
 
 			/*== assign one random mentioned crypto to unknown*/
@@ -100,15 +96,12 @@ double F_FoldCrossValidation_Clustering(vector<vector<double>> users, vector<vec
 
 			/*== check wether we need to ignore the vector*/
 			bool normalised = true;
-			if(vectorIsZero(normalisedUsers[index]))
+			/*== check wether we need to ignore the vector*/
+			bool normalised = true;
+			if (!recommendationEligibility(normalised, normalisedUsers[index], users[index]) )
 			{
-				normalised = false;
-
-				if(vectorIsZero(eliminateUnknown(users[index])))
-				{
-					excluded++;
-					continue;
-				}
+				excluded++;
+				continue;
 			}
 
 			/*== assign one random mentioned crypto to unknown*/
@@ -160,3 +153,5 @@ int assignUnknown(vector<double> user)
 
 	return knownIndexes[randomIndex];
 }
+
+/*=== 2 ===*/
