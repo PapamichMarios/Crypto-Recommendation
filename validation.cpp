@@ -96,8 +96,6 @@ double F_FoldCrossValidation_Clustering(vector<vector<double>> users, vector<vec
 
 			/*== check wether we need to ignore the vector*/
 			bool normalised = true;
-			/*== check wether we need to ignore the vector*/
-			bool normalised = true;
 			if (!recommendationEligibility(normalised, normalisedUsers[index], users[index]) )
 			{
 				excluded++;
