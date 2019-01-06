@@ -1,0 +1,3 @@
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/CMakeFiles/rebuild_cache.dir
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/CMakeFiles/runTests.dir
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/CMakeFiles/edit_cache.dir
