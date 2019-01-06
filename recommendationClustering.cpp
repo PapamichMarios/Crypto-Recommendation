@@ -6,19 +6,12 @@
 #include "utilities.h"
 #include "validation.h"
 
-#define CLUSTER_USERS 50
-#define CLUSTER_ALL   5
-
-#define RECOMMENDATION_A 5
-#define RECOMMENDATION_B 2
-
 using namespace std;
 
 vector<double> Clustering_calculateRatings(vector<double> user, vector<double> normalisedUser, int userIndex, vector<vector<double>> users, vector<vector<double>> normalisedUsers, vector<int> labels, bool normalised)
 {
 	/*== find the cryptos the user has referenced*/
 	vector<int> cryptos_referenced(user.size());
-
 	for(unsigned int i=0; i<user.size(); i++)
 	{
 		if(user.at(i) != INT_MAX)
@@ -38,20 +31,11 @@ vector<double> Clustering_calculateRatings(vector<double> user, vector<double> n
 		if(labels[i] != labels[userIndex] || userIndex == i)
 			continue;
 
-		vector<double> neighbour_user = eliminateUnknown(users[i]);
-		if(vectorIsZero(neighbour_user))
-				continue;
-
 		double similarity;
 		if(normalised)
-		{
-			if(vectorIsZero(normalisedUsers[i]))
-				continue;
-
 			similarity = euclidean_similarity(normalisedUser, normalisedUsers[i]);
-		}
 		else
-			similarity = euclidean_similarity(eliminatedUser, neighbour_user);
+			similarity = euclidean_similarity(eliminatedUser, eliminateUnknown(users[i]));
 
 		zeta += abs(similarity);
 
@@ -92,7 +76,7 @@ void recommendationClustering(vector<vector<double>> users, vector<vector<double
 	time_t start_time = clock();
 
 	/*== cluster users*/
-	vector<int> labels = k_meanspp(normalisedUsers, CLUSTER_USERS);
+	vector<int> labels = k_meanspp(normalisedUsers, users, CLUSTER_USERS);
 
 	/*== recommendation*/
 	for(unsigned int i=0; i<users.size(); i++)
@@ -144,7 +128,7 @@ void recommendationClustering(vector<vector<double>> users, vector<vector<double
 		all_users = normalised_virtual_users;
 		all_users.push_back(normalisedUser);
 
-		vector<int> labels = k_meanspp(all_users, CLUSTER_ALL);
+		vector<int> labels = k_meanspp(all_users, virtual_users, CLUSTER_VIRTUAL);
 
 		/*== get the user ratings*/
 		vector<double> average_user = Clustering_calculateRatings(users.at(i), normalisedUser, labels.size()-1, virtual_users, normalised_virtual_users, labels, normalised);
