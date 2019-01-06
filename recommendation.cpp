@@ -10,7 +10,6 @@
 #include "clustering.h"
 #include "validation.h"
 
-#define CLUSTER_TWEETS 50
 #define ARGS 7
 
 using namespace std;
@@ -31,7 +30,7 @@ int main(int argc, char** argv)
 	/*== clear outputfile */
 	resetOutput(argv[outputFileIndex]);
 
-	/*== create a map with the sentimental value of every word*/
+	/*== create a map word : sentimental value*/
 	map<string, float> vaderLexicon = vaderLexiconMap();
 	
 	/*== create a map crypto : index*/
@@ -73,11 +72,11 @@ int main(int argc, char** argv)
 	vector<vector<double>> tweets = createTweetVector(argv[tweetsFileIndex]);
 
 	/*== cluster tweets*/
-	vector<int> tweets_clusters = k_meanspp(tweets, CLUSTER_TWEETS);
+	vector<int> tweets_clusters = k_meanspp(tweets, tweets, CLUSTER_TWEETS);
 
 	/*== find virtual user for every cluster*/
-	vector<vector<double>> virtual_users = createVirtualUsers(tweets_sentiments, tweets_clusters, CLUSTER_TWEETS, 100);
-	vector<vector<double>> normalised_virtual_users = createVirtualUsersNormalised(tweets_sentiments_normalised, tweets_clusters, CLUSTER_TWEETS, 100);
+	vector<vector<double>> virtual_users = createVirtualUsers(tweets_sentiments, tweets_clusters, CLUSTER_TWEETS, CRYPTO_NUMBER);
+	vector<vector<double>> normalised_virtual_users = createVirtualUsersNormalised(tweets_sentiments_normalised, tweets_clusters, CLUSTER_TWEETS, CRYPTO_NUMBER);
 
 	/*==== 2. Recommend cryptos based on twitter clustering*/
 	recommendationLSH(users, normalisedUsers, virtual_users, normalised_virtual_users, cryptosIndex, k, L, argv[inputFileIndex], argv[outputFileIndex]);

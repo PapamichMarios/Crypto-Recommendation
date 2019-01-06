@@ -10,26 +10,23 @@
 
 using namespace std;
 
-vector<int> k_meanspp(vector<vector<double>> users, int clusters)
+vector<int> k_meanspp(vector<vector<double>> users, vector<vector<double>> prenormalised_users, int clusters)
 {
-	vector<int> labels;
+	vector<int> labels(users.size());
 	vector<vector<double>> centroids;
 
 	/*== create metric object, we use euclidean metric*/
 	Metric<double> * metric_ptr = getMetric("euclidean");
 
-	/*== remove vectors with 0 cryptos referenced*/
-	//vector<vector<double>> new_users;
-	//for(unsigned int i=0; i<users.size(); i++)
-	//{
-	//	if(!vectorIsZero(eliminateUnknown(users[i])))
-	//		new_users.push_back(users[i]);
-	//}
-
-	//users = new_users;
+	/*== assign -1 to users which dont have neighbours*/
+	for(unsigned int i=0; i<prenormalised_users.size(); i++)
+	{
+		if(vectorIsZero(eliminateUnknown(prenormalised_users[i])))
+			labels[i] = -1;
+	}
 
 	/*== initialisation*/
-	centroids = initialisation(users, users.size(), clusters);
+	centroids = initialisation(users, users.size(), clusters, labels);
 
 	/*== assignment && update*/
 	long double objective_function=0;
@@ -39,7 +36,7 @@ vector<int> k_meanspp(vector<vector<double>> users, int clusters)
 	{
 		last_objective_function = objective_function;
 
-		labels = assignment(users, centroids, users.size(), metric_ptr);
+		labels = assignment(users, centroids, users.size(), metric_ptr, labels);
 
 		centroids = update(users, labels, centroids, objective_function, metric_ptr);
 	
@@ -54,7 +51,7 @@ vector<int> k_meanspp(vector<vector<double>> users, int clusters)
 }
 
 /*== random initialisation*/
-vector<vector<double>> initialisation(vector<vector<double>> data, int data_size, int clusters)
+vector<vector<double>> initialisation(vector<vector<double>> data, int data_size, int clusters, vector<int> labels)
 {
 	vector<vector<double>> centroids(clusters);
 	int index;
@@ -73,7 +70,7 @@ vector<vector<double>> initialisation(vector<vector<double>> data, int data_size
 			}
 		}
 
-		if(flag)
+		if(flag || labels[index] == -1)
 		{
 			i-=1;
 			continue;
@@ -87,15 +84,18 @@ vector<vector<double>> initialisation(vector<vector<double>> data, int data_size
 }
 
 /*== loyds assignment*/
-vector<int> assignment(vector<vector<double>> data, vector<vector<double>> centroids, int data_size, Metric<double>* metric_ptr)
+vector<int> assignment(vector<vector<double>> data, vector<vector<double>> centroids, int data_size, Metric<double>* metric_ptr, vector<int> labels)
 {
-	vector<int> cluster_assigned(data_size);
+	vector<int> cluster_assigned = labels;
 	
 	/*== calculate the distance of all the points with the centroids
 		 assign them to the closest centroid
 	  == */
 	for(unsigned int i=0; i<data.size(); i++)
 	{
+		if(labels[i] == -1)
+			continue;
+
 		double min_distance = INT_MAX;
 		int cluster;
 		double temp_distance;
@@ -125,11 +125,19 @@ vector<vector<double>> update(vector<vector<double>> data, vector<int> labels, v
 
 	/*== we count how many points each cluster has*/
 	for(unsigned int i=0; i<labels.size(); i++)
+	{
+		if(labels[i] == -1)
+			continue;
+
 		cluster_size.at(labels[i])++;
+	}
 
 	/*== find the mean of each cluster*/
 	for(unsigned int i=0; i<labels.size(); i++)
 	{
+		if(labels[i] == -1)
+			continue;
+
 		for(unsigned int j=0; j<data[i].size(); j++)
 			new_centroids.at(labels[i]).at(j) += data.at(i).at(j)/cluster_size.at(labels[i]);
 	}
@@ -138,8 +146,12 @@ vector<vector<double>> update(vector<vector<double>> data, vector<int> labels, v
 	objective_function = 0;
 
 	for(unsigned int i=0; i<labels.size(); i++)
+	{
+		if(labels[i] == -1)
+			continue;
+
 		objective_function += pow(metric_ptr->distance2(data[i], new_centroids[labels[i]]),2);
+	}
 
 	return new_centroids;
 }
-

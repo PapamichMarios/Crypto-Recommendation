@@ -1,3 +1,1 @@
 -na checkarw an leitourgei swsta to clustering
--labels sto kmeansa fairei kai den kserw an pairnw ta swsta stoixeia meta to k-means => ta stoixeia pou einai trash ta labels tous -1
--na to kanw pio grigoro

@@ -5,6 +5,16 @@
 
 #include "hash_table.h"
 
+#define MAX_NEIGHBOURS   20
+#define CRYPTO_NUMBER    100
+
+#define CLUSTER_USERS    50
+#define CLUSTER_VIRTUAL  5
+#define CLUSTER_TWEETS   50
+
+#define RECOMMENDATION_A 5
+#define RECOMMENDATION_B 2
+
 void rerunCheck(int argc, int args);
 void getInlineArguments(int argc, char** argv, short int &inputFileIndex, short int &outputFileIndex, bool &validateFlag, short int &tweetsFileIndex);
 void resetOutput(std::string outputfile);

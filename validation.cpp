@@ -94,7 +94,6 @@ void F_FoldCrossValidation(vector<vector<double>> users, vector<vector<double>> 
 	
 	for(int i=0; i<FOLDS; i++)
 	{
-		cout << i << endl;
 		double MAE=0;
 		int excluded=0;
 		int plus_one=0;
@@ -130,15 +129,11 @@ void F_FoldCrossValidation(vector<vector<double>> users, vector<vector<double>> 
 
 			normalisedUsers_temp[index][unknownIndex] = 0;
 			users_temp[index][unknownIndex] = INT_MAX;
-
 		}
 		
 		/*== cluster the training users with the testing users*/
-		vector<int> labels = k_meanspp(normalisedUsers_temp, 50);
+		vector<int> labels = k_meanspp(normalisedUsers_temp, users_temp, CLUSTER_USERS);
 
-		for(unsigned int j=0; j<testing_indexes.size(); j++)
-			cout << testing_indexes[j] << ", ";
-		cout<<endl;
 		/*== get one part of the users set*/
 		for(int j=0; j<partition_size; j++)
 		{
@@ -156,15 +151,9 @@ void F_FoldCrossValidation(vector<vector<double>> users, vector<vector<double>> 
 
 			/*== compare the crypto we assigned as unkown to its real value*/
 			MAE += abs(normalisedUsers[index][testing_indexes[j]] - average_user[testing_indexes[j]]);
-			if( i == FOLDS -1 )
-				cout << MAE << " ";
-
 		}
 
-		cout << endl;
-		cout << "excluded: " << excluded << endl;
 		average_MAE += MAE/(partition_size-excluded);
-		cout << "MAE: " << average_MAE << endl;
 	}
 
 	printRecommendationMAE(outputfile, "Clustering Recommendation MAE", average_MAE/FOLDS);
@@ -267,7 +256,7 @@ void virtualValidation(vector<vector<double>> users, vector<vector<double>> norm
 		all_users = normalised_virtual_users;
 		all_users.push_back(normalisedUsers[i]);
 
-		vector<int> labels = k_meanspp(all_users, 5);
+		vector<int> labels = k_meanspp(all_users, virtual_users, CLUSTER_VIRTUAL);
 
 		/*== get the user ratings*/
 		vector<double> average_user = Clustering_calculateRatings(users[i], normalisedUsers[i], labels.size()-1, virtual_users, normalised_virtual_users, labels, normalised);

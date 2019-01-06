@@ -13,12 +13,6 @@
 #include "recommendationLSH.h"
 #include "validation.h"
 
-#define MAX_NEIGHBOURS  	 20
-#define CRYPTO_NUMBER 		 100
-
-#define RECOMMENDATION_A 5
-#define RECOMMENDATION_B 2
-
 using namespace std;
 
 /*===== Create && Fill hash_tables*/
