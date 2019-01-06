@@ -369,7 +369,7 @@ vector<vector<double>> createVirtualUsers(map<int, vector<double>> tweets, vecto
 	for(auto &tweet : tweets)
 	{
 		tweet.second = eliminateUnknown(tweet.second);
-		for(unsigned int j=0; j<100; j++)
+		for(unsigned int j=0; j<CRYPTO_NUMBER; j++)
 			virtual_users[labels[tweet.first]][j] += tweet.second[j];
 	}
 
@@ -516,7 +516,7 @@ void printRecommendationTimer(string outputfile, double time)
 		exit(EXIT_FAILURE);
 	}
 
-	outfile << "Execution time: " << time << endl << endl;
+	outfile << "Execution time: " << time << " secs" << endl << endl;
 
 	outfile.close();
 }
