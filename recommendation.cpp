@@ -56,10 +56,10 @@ int main(int argc, char** argv)
 	if(validateFlag)
 	{
 		F_FoldCrossValidation(k, L, users, normalisedUsers, argv[inputFileIndex], argv[outputFileIndex]);
-		cout << "10 Fold Cross Validation for 1a done!" << endl;
+		cout << "1a - 10 Fold Cross Validation done!" << endl;
 
 		F_FoldCrossValidation(users, normalisedUsers, argv[outputFileIndex]);
-		cout << "10 Fold Cross Validation for 2a done!" << endl;
+		cout << "2a - 10 Fold Cross Validation done!" << endl;
 	}
 	/*====*/
 
@@ -88,10 +88,10 @@ int main(int argc, char** argv)
 	if(validateFlag)
 	{
 		virtualValidation(users, normalisedUsers, virtual_users, normalised_virtual_users, k, L, argv[inputFileIndex], argv[outputFileIndex]);
-		cout << "Validation for 1b done!" << endl;
+		cout << "1b - Validation done!" << endl;
 
 		virtualValidation(users, normalisedUsers, virtual_users, normalised_virtual_users, argv[outputFileIndex]);
-		cout << "Validation for 2b done!" << endl;
+		cout << "2b - Validation done!" << endl;
 	}
 	/*===*/
 
