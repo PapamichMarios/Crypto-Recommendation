@@ -576,24 +576,34 @@ vector<double> eliminateUnknown(vector<double> user)
 	return user;
 }
 
-double cosine_similarity(const vector<double> vector1, const vector<double> vector2)
+double cosine_similarity(const vector<double> u, const vector<double> v)
 {
 		double dot_product = 0;
 		
 		double length1=0, length2=0;
 		double length_product = 0;
 
-		for(unsigned int i=0; i<vector1.size(); i++)
+		for(unsigned int i=0; i<u.size(); i++)
 		{
-			dot_product += vector1[i]*vector2[i];
-			length1 += vector1[i] * vector1[i];
-			length2 += vector2[i] * vector2[i];
+			dot_product += u[i] * v[i];
+			length1 += u[i] * u[i];
+			length2 += v[i] * v[i];
 		}
 
 		length_product = sqrt(length1*length2);
 
 		return dot_product/length_product;
 }
+
+double euclidean_similarity(const vector<double> u, const vector<double> v)
+{
+	double distance = 0;
+	for (unsigned int i=0; i<u.size(); i++)
+		distance += (u[i] - v[i]) * (u[i] - v[i]);
+
+	return 1/(1+sqrt(distance));
+}
+
 
 bool recommendationEligibility(bool &normalised, vector<double> &normalisedUser, vector<double> &user)
 {

@@ -48,10 +48,10 @@ vector<double> Clustering_calculateRatings(vector<double> user, vector<double> n
 			if(vectorIsZero(normalisedUsers[i]))
 				continue;
 
-			similarity = cosine_similarity(normalisedUser, normalisedUsers[i]);
+			similarity = euclidean_similarity(normalisedUser, normalisedUsers[i]);
 		}
 		else
-			similarity = cosine_similarity(eliminatedUser, neighbour_user);
+			similarity = euclidean_similarity(eliminatedUser, neighbour_user);
 
 		zeta += abs(similarity);
 
@@ -120,9 +120,6 @@ void recommendationClustering(vector<vector<double>> users, vector<vector<double
 
 	printRecommendationTimer(outfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
 
-	/*== validation*/
-	double MAE = F_FoldCrossValidation_Clustering(users, normalisedUsers, labels);
-	printRecommendationMAE(outfile, "Clustering Recommendation MAE", MAE);
 }
 
 /*==== 2. */

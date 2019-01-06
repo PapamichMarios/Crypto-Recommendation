@@ -8,6 +8,7 @@
 #include "recommendationClustering.h"
 #include "hash_table.h"
 #include "clustering.h"
+#include "validation.h"
 
 #define CLUSTER_TWEETS 50
 #define ARGS 7
@@ -48,7 +49,19 @@ int main(int argc, char** argv)
 
 	/*==== 1. Recommend cryptos based on user clustering*/
 	recommendationLSH(users, normalisedUsers, cryptosIndex, k, L, argv[inputFileIndex], argv[outputFileIndex]);
+	cout << "1a - LSH Recommendation done!" << endl;
+
 	recommendationClustering(users, normalisedUsers, cryptosIndex, argv[outputFileIndex]);
+	cout << "2a - Clustering Recommendation done!" << endl;
+
+	if(validateFlag)
+	{
+		F_FoldCrossValidation(k, L, users, normalisedUsers, argv[inputFileIndex], argv[outputFileIndex]);
+		cout << "10 Fold Cross Validation for 1a done!" << endl;
+
+		F_FoldCrossValidation(users, normalisedUsers, argv[outputFileIndex]);
+		cout << "10 Fold Cross Validation for 2a done!" << endl;
+	}
 	/*====*/
 
 	/*== construct map "twitterid : vector<double> crypto sentiments"*/
@@ -68,7 +81,19 @@ int main(int argc, char** argv)
 
 	/*==== 2. Recommend cryptos based on twitter clustering*/
 	recommendationLSH(users, normalisedUsers, virtual_users, normalised_virtual_users, cryptosIndex, k, L, argv[inputFileIndex], argv[outputFileIndex]);
+	cout << "1b - LSH Recommendation done!" << endl;
+
 	recommendationClustering(users, normalisedUsers, virtual_users, normalised_virtual_users, cryptosIndex, argv[outputFileIndex]);
+	cout << "2b - Clustering Recommendation done!" << endl;
+
+	if(validateFlag)
+	{
+		virtualValidation(users, normalisedUsers, virtual_users, normalised_virtual_users, k, L, argv[inputFileIndex], argv[outputFileIndex]);
+		cout << "Validation for 1b done!" << endl;
+
+		virtualValidation(users, normalisedUsers, virtual_users, normalised_virtual_users, argv[outputFileIndex]);
+		cout << "Validation for 2b done!" << endl;
+	}
 	/*===*/
 
 	exit(EXIT_SUCCESS);	

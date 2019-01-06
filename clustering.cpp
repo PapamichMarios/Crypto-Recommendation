@@ -6,7 +6,7 @@
 #include "utilities.h"
 #include "clustering_utilities.h"
 
-#define MAX_PROCESS_LOOPS 	30
+#define MAX_PROCESS_LOOPS 15
 
 using namespace std;
 
@@ -19,14 +19,14 @@ vector<int> k_meanspp(vector<vector<double>> users, int clusters)
 	Metric<double> * metric_ptr = getMetric("euclidean");
 
 	/*== remove vectors with 0 cryptos referenced*/
-	vector<vector<double>> new_users;
-	for(unsigned int i=0; i<users.size(); i++)
-	{
-		if(!vectorIsZero(eliminateUnknown(users[i])))
-			new_users.push_back(users[i]);
-	}
+	//vector<vector<double>> new_users;
+	//for(unsigned int i=0; i<users.size(); i++)
+	//{
+	//	if(!vectorIsZero(eliminateUnknown(users[i])))
+	//		new_users.push_back(users[i]);
+	//}
 
-	users = new_users;
+	//users = new_users;
 
 	/*== initialisation*/
 	centroids = initialisation(users, users.size(), clusters);
