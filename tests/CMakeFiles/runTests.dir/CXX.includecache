@@ -1,0 +1,180 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering.cpp
+vector
+-
+climits
+-
+random
+-
+clustering.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering.h
+utilities.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.h
+clustering_utilities.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering_utilities.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering.h
+metric.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/metric.h
+vector
+-
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering_utilities.cpp
+vector
+-
+climits
+-
+clustering_utilities.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering_utilities.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering_utilities.h
+vector
+-
+string
+-
+metric.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/metric.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/fi.h
+hyperplane.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hyperplane.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/g.h
+hyperplane.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hyperplane.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hash_node.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hash_table.h
+string
+-
+algorithm
+-
+fstream
+-
+climits
+-
+ctime
+-
+map
+-
+vector
+-
+hash_node.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hash_node.h
+help_functions.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/help_functions.h
+fi.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/fi.h
+g.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/g.h
+utilities.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/help_functions.h
+cstdlib
+-
+sstream
+-
+fstream
+-
+cstdio
+-
+iostream
+-
+cmath
+-
+random
+-
+unistd.h
+-
+fstream
+-
+vector
+-
+algorithm
+-
+cstring
+-
+map
+-
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hyperplane.h
+string
+-
+vector
+-
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/metric.h
+vector
+-
+cmath
+-
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/clustering_test.cpp
+gtest/gtest.h
+-
+../clustering.cpp
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering.cpp
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/distance_test.cpp
+gtest/gtest.h
+-
+vector
+-
+../clustering_utilities.cpp
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/clustering_utilities.cpp
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/main_TESTS.cpp
+gtest/gtest.h
+-
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/normalisation_test.cpp
+gtest/gtest.h
+-
+../utilities.cpp
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.cpp
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/tests/similarities_test.cpp
+gtest/gtest.h
+-
+vector
+-
+../utilities.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.cpp
+iostream
+-
+getopt.h
+-
+map
+-
+fstream
+-
+sstream
+-
+climits
+-
+cmath
+-
+g.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/g.h
+utilities.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.h
+help_functions.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/help_functions.h
+
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/utilities.h
+vector
+-
+hash_table.h
+/home/marios/Desktop/ProjectEmiris/Ergasia 3/Project-Erg3/hash_table.h
+
