@@ -35,5 +35,6 @@ void printRecommendationTitle(std::string outputfile, std::string title);
 void printRecommendationTimer(std::string outputfile, double time);
 void printRecommendationMAE(std::string outputfile, std::string text, double MAE);
 
-double cosine_similarity(const std::vector<double> vector1, const std::vector<double> vector2);
+double cosine_similarity(const std::vector<double> u, const std::vector<double> v);
+double euclidean_similarity(const std::vector<double> u, const std::vector<double> v);
 #endif

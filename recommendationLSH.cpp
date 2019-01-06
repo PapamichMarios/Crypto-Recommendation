@@ -62,6 +62,50 @@ HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users
 	return hash_tableptr;
 }
 
+HashTable<vector<double>> ** createAndFillHashTable(vector<vector<double>> users, vector<vector<double>> normalisedUsers, string inputfile, int k, int L, int start_index, int end_index)
+{
+	ifstream infile;
+
+	infile.open(inputfile);
+	if(!infile.is_open())
+	{
+		cout << "Could not open input data file" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	/*== find table size*/
+	int tableSize = help_functions::calculate_tableSize(infile, "cosine", k);
+
+	/*== find dimensions*/
+	int dimensions = CRYPTO_NUMBER;
+
+	/*== construct hash_table*/
+	HashTable<vector<double>> ** hash_tableptr = new HashTable<vector<double>>*[L];
+
+	for(int i=0; i<L; i++)
+		hash_tableptr[i] = new HashTable_COS<vector<double>>(tableSize, k, dimensions);
+
+	/*== fill the hash table with users vector*/
+	for(unsigned int i=0; i<users.size(); i++)
+	{
+		/*== we ignore these users since we have them as tests*/
+		if( i >= start_index && i < end_index)
+			continue;
+
+		/*== ignore users with 0 crypto references*/
+		users[i] = eliminateUnknown(users[i]);
+		if( vectorIsZero(users.at(i)) )
+			continue;
+		
+		for(int j=0; j<L; j++)
+			hash_tableptr[j]->put(normalisedUsers.at(i), users.at(i), to_string(i));
+	}
+
+	infile.close();
+
+	return hash_tableptr;
+}
+
 /*== Recommendation Functions*/
 vector<double> LSH_calculateRatings(HashTable<vector<double>> ** hash_tableptr, vector<double> user, vector<double> normalisedUser, vector<vector<double>> normalisedUsers, int L, bool normalised)
 {
@@ -236,10 +280,6 @@ void recommendationLSH(vector<vector<double>> users, vector<vector<double>> norm
 	}
 
 	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
-
-	/*== validation*/
-	double MAE = F_FoldCrossValidation_LSH(hash_tableptr, L, users, normalisedUsers);
-	printRecommendationMAE(outputfile, "LSH Recommendation MAE", MAE);
 
 	/*== free hash tables*/
 	unallocateHashTable(hash_tableptr, L);

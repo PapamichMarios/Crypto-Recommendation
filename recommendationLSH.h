@@ -9,6 +9,7 @@ void recommendationLSH(std::vector<std::vector<double>> users, std::vector<std::
 void recommendationLSH(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, std::vector<std::vector<double>> virtual_users, std::vector<std::vector<double>> normalised_virtual_users, std::map<int, std::string> cryptosIndex, int k, int L, std::string inputfile, std::string outputfile);
 
 HashTable<std::vector<double>> ** createAndFillHashTable(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, std::string inputfile, int k, int L);
+HashTable<std::vector<double>> ** createAndFillHashTable(std::vector<std::vector<double>> users, std::vector<std::vector<double>> normalisedUsers, std::string inputfile, int k, int L, int start_index, int end_index);
 
 std::vector<double> LSH_calculateRatings(HashTable<std::vector<double>> ** hash_tableptr, std::vector<double> user, std::vector<double> normalisedUser, std::vector<std::vector<double>> normalisedUsers, int L, bool normalised);
 
