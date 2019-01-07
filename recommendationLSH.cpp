@@ -119,6 +119,13 @@ vector<double> LSH_calculateRatings(HashTable<vector<double>> ** hash_tableptr, 
 	vector<double> similarity;
 	LSH_calculateNeighbourhood(all_neighbours, all_distances, neighbours, similarity, L);
 
+	/*== in case no neighbours were found*/
+	if(neighbours.size() == 0)
+	{
+		vector<double> zero_sized_user;
+		return zero_sized_user;
+	}	
+
 	/*== estimate the unknown cryptos, using neighbourhood similarity*/
 	LSH_predictUnknownCryptos(user, normalisedUser, normalisedUsers, similarity, neighbours);
 
@@ -262,15 +269,20 @@ void recommendationLSH(vector<vector<double>> users, vector<vector<double>> norm
 
 		/*== get the user ratings*/
 		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users.at(i), normalisedUser, normalisedUsers, L, normalised);
-		
+
+		/*== if the user has no neighbours*/
+		if(average_user.size() == 0)
+		{
+			printUnmatched(cryptosIndex, i, outputfile);
+			continue;
+		}
+	
 		/*== return the 5 best results*/
 		vector<int> recommendations =  cryptosRecommendedByNeighbourhood(average_user);
-
-		/*== print the recommended results*/
-		if(recommendations.size() > 0)
-			printRecommendation(cryptosIndex, recommendations, i, outputfile, RECOMMENDATION_A);
-		else
+		if(recommendations.size() == 0)
 			printUnmatched(cryptosIndex, i, outputfile);
+		else
+			printRecommendation(cryptosIndex, recommendations, i, outputfile, RECOMMENDATION_A);
 	}
 
 	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);
@@ -301,15 +313,22 @@ void recommendationLSH(vector<vector<double>> users, vector<vector<double>> norm
 
 		/*== get the user ratings*/
 		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users.at(i), normalisedUser, normalisedUsers, L, normalised);
-		
+
+		/*== if the user has no neighbours*/
+		if(average_user.size() == 0)
+		{
+			printUnmatched(cryptosIndex, i, outputfile);
+			continue;
+		}
+
 		/*== return the 5 best results*/
 		vector<int> recommendations =  cryptosRecommendedByNeighbourhood(average_user);
 
 		/*== print the recommended results*/
-		if(recommendations.size() > 0)
-			printRecommendation(cryptosIndex, recommendations, i, outputfile, RECOMMENDATION_B);
-		else
+		if(recommendations.size() == 0)
 			printUnmatched(cryptosIndex, i, outputfile);
+		else
+			printRecommendation(cryptosIndex, recommendations, i, outputfile, RECOMMENDATION_B);
 	}
 
 	printRecommendationTimer(outputfile, (double)(clock() - start_time)/CLOCKS_PER_SEC);

@@ -5,7 +5,11 @@
 
 #include "hash_table.h"
 
-#define MAX_NEIGHBOURS   20
+#define VADER_LEXICON 		 "./vader_lexicon.csv"
+#define CRYPTOS				 "coins_queries.csv"
+#define ALPHA				 15
+
+#define MAX_NEIGHBOURS   25
 #define CRYPTO_NUMBER    100
 
 #define CLUSTER_USERS    50

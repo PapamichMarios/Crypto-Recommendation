@@ -61,6 +61,13 @@ void F_FoldCrossValidation(int k, int L, vector<vector<double>> users, vector<ve
 			/*== calculate the ratings of the user based on the clusters*/
 			vector<double> average_user = LSH_calculateRatings(hash_tableptr, users[index], normalisedUsers[index], normalisedUsers, L, normalised);
 
+			/*== if the user had no neighbours*/
+			if(average_user.size() == 0)
+			{
+				excluded++;
+				continue;
+			}
+
 			/*== compare the crypto we assigned as unknown to its real value*/
 			double predicted_sentiment = average_user[unknownIndex];
 			MAE += abs(sentiment - predicted_sentiment);
@@ -149,6 +156,13 @@ void F_FoldCrossValidation(vector<vector<double>> users, vector<vector<double>> 
 			/*== calculate the ratings of the user based on the clusters*/
 			vector<double> average_user = Clustering_calculateRatings(users_temp[index], normalisedUsers_temp[index], index, users_temp, normalisedUsers_temp, labels, normalised);
 
+			/*== if the user had no neighbours*/
+			if(average_user.size() == 0)
+			{
+				excluded++;
+				continue;
+			}
+
 			/*== compare the crypto we assigned as unkown to its real value*/
 			MAE += abs(normalisedUsers[index][testing_indexes[j]] - average_user[testing_indexes[j]]);
 		}
@@ -211,6 +225,13 @@ void virtualValidation(vector<vector<double>> users, vector<vector<double>> norm
 		/*== get the user ratings*/
 		vector<double> average_user = LSH_calculateRatings(hash_tableptr, users[i], normalisedUsers[i], normalisedUsers, L, normalised);
 
+		/*== if the user had no neighbours*/
+		if(average_user.size()==0)
+		{
+			excluded++;
+			continue;
+		}
+
 		/*== compare the crypto we assigned as unkown to its real value*/
 		double predicted_sentiment = average_user[unknownIndex];
 		MAE += abs(sentiment - predicted_sentiment);
@@ -260,6 +281,13 @@ void virtualValidation(vector<vector<double>> users, vector<vector<double>> norm
 
 		/*== get the user ratings*/
 		vector<double> average_user = Clustering_calculateRatings(users[i], normalisedUsers[i], labels.size()-1, virtual_users, normalised_virtual_users, labels, normalised);
+
+		/*== if the user had no neighbours*/
+		if(average_user.size() == 0)
+		{
+			excluded++;
+			continue;
+		}
 
 		/*== compare the crypto we assigned as unkown to its real value*/
 		double predicted_sentiment = average_user[unknownIndex];

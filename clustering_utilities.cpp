@@ -10,7 +10,6 @@ using namespace std;
 vector<int> cryptosRecommendedByNeighbourhood(vector<double> user)
 {
 	vector<int> recommendation_ids;
-	
 	for(unsigned int j=0; j<RECOMMENDATION_USERS; j++)
 	{
 		double max_distance = INT_MIN;
@@ -23,6 +22,9 @@ vector<int> cryptosRecommendedByNeighbourhood(vector<double> user)
 				index = z;
 			}
 		}
+
+		if(max_distance == INT_MIN)
+			return recommendation_ids;
 
 		recommendation_ids.push_back(index);
 		user.at(index) = INT_MIN;

@@ -53,10 +53,17 @@ vector<double> Clustering_calculateRatings(vector<double> user, vector<double> n
 
 			user[j] += similarity * normalisedUsers[i][j];
 		}
-
 	}
 
-	zeta = 1/(zeta + 0.1);
+	/*== in case no neighbours were found*/
+	if(zeta == 0)
+	{
+		vector<double> zero_neighbours_user;
+		return zero_neighbours_user;
+	}
+	
+	/*== else calculate the vector based on neighbours*/
+	zeta = 1/zeta;
 
 	for(unsigned int j=0; j<user.size(); j++)
 	{
@@ -91,6 +98,13 @@ void recommendationClustering(vector<vector<double>> users, vector<vector<double
 
 		/*== get the user ratings*/
 		vector<double> average_user = Clustering_calculateRatings(users.at(i), normalisedUser, i, users, normalisedUsers, labels, normalised);
+
+		/*== in case the user has no neighbours*/
+		if(average_user.size() == 0)
+		{
+			printUnmatched(cryptosIndex, i , outfile);
+			continue;
+		}
 
 		/*== get the 5 best results*/
 		vector<int> recommendations = cryptosRecommendedByNeighbourhood(average_user);
@@ -132,6 +146,13 @@ void recommendationClustering(vector<vector<double>> users, vector<vector<double
 
 		/*== get the user ratings*/
 		vector<double> average_user = Clustering_calculateRatings(users.at(i), normalisedUser, labels.size()-1, virtual_users, normalised_virtual_users, labels, normalised);
+
+		/*== in case the user has no neighbours*/
+		if(average_user.size() == 0)
+		{
+			printUnmatched(cryptosIndex, i , outfile);
+			continue;
+		}
 
 		/*== get the 5 best results*/
 		vector<int> recommendations = cryptosRecommendedByNeighbourhood(average_user);

@@ -10,12 +10,6 @@
 #include "utilities.h"
 #include "help_functions.h"
 
-#define VADER_LEXICON 		 "./vader_lexicon.csv"
-#define CRYPTOS				 "coins_queries.csv"
-#define ALPHA				 15
-#define MAX_NEIGHBOURS  	 20
-#define CRYPTO_NUMBER 		 100
-
 using namespace std;
 
 void rerunCheck(int argc, int args)
@@ -464,8 +458,16 @@ void printRecommendation(map<int, string> cryptos, vector<int> recommendations, 
 	}
 
 	outfile << "<u" << user+1 << ">";
-	for (unsigned int j=0; j<how_many; j++)
-		outfile << cryptos.at(recommendations.at(j)) << " ";
+	if(recommendations.size() < how_many)
+	{
+		for(unsigned int j=0; j<recommendations.size(); j++)
+			outfile << cryptos.at(recommendations.at(j)) << " ";
+	}
+	else
+	{
+		for (unsigned int j=0; j<how_many; j++)
+			outfile << cryptos.at(recommendations.at(j)) << " ";
+	}
 
 	outfile << endl;
 
